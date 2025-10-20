@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { studentsAPI } from "../api/endpoints"
@@ -10,12 +8,13 @@ export function StudentForm() {
   const navigate = useNavigate()
   const { id } = useParams()
   const mode = id ? "edit" : "create"
+
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
     age: "",
-    sex: "M",
+    sex: "male",
     address: "",
     state_of_origin: "",
     local_govt_area: "",
@@ -26,6 +25,7 @@ export function StudentForm() {
     parent_phone_number: "",
     passport: null,
   })
+
   const [preview, setPreview] = useState(null)
 
   useEffect(() => {
@@ -59,13 +59,18 @@ export function StudentForm() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-
     try {
+      const form = new FormData()
+      Object.entries(formData).forEach(([key, value]) => {
+        form.append(key, value)
+      })
+
       if (mode === "create") {
-        await studentsAPI.create(formData)
+        await studentsAPI.create(form)
       } else {
-        await studentsAPI.update(id, formData)
+        await studentsAPI.update(id, form)
       }
+
       navigate("/students")
     } catch (error) {
       console.error("Failed to save student:", error)
@@ -81,7 +86,10 @@ export function StudentForm() {
       </h1>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Form Section */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg space-y-6">
+
+          {/* PERSONAL INFO */}
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
               Personal Information
@@ -105,39 +113,36 @@ export function StudentForm() {
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
               />
+
+              {/* Sex Dropdown */}
               <div>
-                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Sex</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="M"
-                      checked={formData.sex === "M"}
-                      onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
-                    />
-                    <span>Male 👨</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="F"
-                      checked={formData.sex === "F"}
-                      onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
-                    />
-                    <span>Female 👩</span>
-                  </label>
-                </div>
+                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Sex
+                </label>
+                <select
+                  value={formData.sex}
+                  onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
               </div>
             </div>
           </div>
 
+          {/* ACADEMIC INFO */}
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
               Academic Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              {/* Class Level */}
               <div>
-                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Class Level</label>
+                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Class Level
+                </label>
                 <select
                   value={formData.class_level}
                   onChange={(e) => setFormData({ ...formData, class_level: e.target.value })}
@@ -151,19 +156,45 @@ export function StudentForm() {
                   <option value="SS3">SS3</option>
                 </select>
               </div>
-              <Input
-                label="Stream"
-                value={formData.stream}
-                onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
-              />
-              <Input
-                label="Section"
-                value={formData.section}
-                onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-              />
+
+              {/* Stream Dropdown */}
+              <div>
+                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Stream
+                </label>
+                <select
+                  value={formData.stream}
+                  onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select Stream</option>
+                  <option value="Science">Science</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="Art">Art</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+
+              {/* Section Dropdown */}
+              <div>
+                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Section
+                </label>
+                <select
+                  value={formData.section}
+                  onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select Section</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                </select>
+              </div>
             </div>
           </div>
 
+          {/* PARENT INFO */}
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
               Parent Information
@@ -183,6 +214,7 @@ export function StudentForm() {
             </div>
           </div>
 
+          {/* ADDRESS INFO */}
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
               Address Information
@@ -206,16 +238,23 @@ export function StudentForm() {
             </div>
           </div>
 
+          {/* BUTTONS */}
           <div className="flex gap-4 pt-6">
             <Button type="submit" loading={loading} className="flex-1">
               {mode === "create" ? "Create Student" : "Update Student"} ❤️
             </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate("/students")} className="flex-1">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate("/students")}
+              className="flex-1"
+            >
               Cancel
             </Button>
           </div>
         </div>
 
+        {/* PASSPORT SECTION */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg h-fit">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Passport Photo</h3>
           <label className="block border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-2xl p-6 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">

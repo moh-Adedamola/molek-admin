@@ -17,15 +17,10 @@ export function Dashboard() {
           contentAPI.list({ page_size: 1 }),
         ])
 
-        // Debug: Log full responses to console to inspect why counts are high (e.g., hitting prod DB?)
-        console.log("Users API response:", usersRes.data)
-        console.log("Students API response:", studentsRes.data)
-        console.log("Content API response:", contentRes.data)
-
         setStats({
-          users: usersRes.data.count || usersRes.data.length || 0,
-          students: studentsRes.data.count || studentsRes.data.length || 0,
-          content: contentRes.data.count || contentRes.data.length || 0,
+          users: usersRes.data.count || 0,
+          students: studentsRes.data.count || 0,
+          content: contentRes.data.count ||  0,
         })
       } catch (error) {
         console.error("Failed to fetch stats:", error)

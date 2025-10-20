@@ -1,16 +1,18 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: {
     "Content-Type": "application/json",
+    "Accept": "application/json",
   },
-  withCredentials: true, // For admin session cookies
+  withCredentials: true,
   xsrfCookieName: 'csrftoken',
   xsrfHeaderName: 'X-CSRFToken',
 });
+
 
 // Request interceptor (no JWT for admin; use session cookies)
 api.interceptors.request.use((config) => {
@@ -77,7 +79,7 @@ export const authAPI = {
 
 // Users endpoints (/admin/users/userprofile/ - admin management)
 export const usersAPI = {
-  list: (params = {}) => api.get("/admin/users/userprofile/", { params }),  // Line ~52: Full path, no root
+  list: (params = {}) => api.get("/api/userprofile/", { params }),  // Line ~52: Full path, no root
   get: (id) => api.get(`/admin/users/userprofile/${id}/`),  // Line 54: Safe, ID-specific
   update: (id, data) => api.put(`/admin/users/userprofile/${id}/change/`, data),
   delete: (id) => api.delete(`/admin/users/userprofile/${id}/delete/`),
@@ -85,7 +87,7 @@ export const usersAPI = {
 
 // Students endpoints (/admin/users/student/ - admin management)
 export const studentsAPI = {
-  list: (params = {}) => api.get("/admin/users/student/", { params }),
+  list: (params = {}) => api.get("/api/students/", { params }),
   get: (id) => api.get(`/admin/users/student/${id}/`),
   update: (id, data) => {
     const formData = new FormData();
@@ -101,7 +103,7 @@ export const studentsAPI = {
 
 // Content endpoints (/admin/content/contentitem/ - admin only)
 export const contentAPI = {
-  list: (params = {}) => api.get("/admin/content/contentitem/", { params }),
+  list: (params = {}) => api.get("/api/contentitem/", { params }),
   get: (id) => api.get(`/admin/content/contentitem/${id}/`),
   create: (data) => {
     const formData = new FormData();
