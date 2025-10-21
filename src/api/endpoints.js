@@ -5,20 +5,23 @@ export function getCookie(name) {
   const value = `; ${document.cookie}`
   const parts = value.split(`; ${name}=`)
   if (parts.length === 2) return parts.pop().split(";").shift()
+  return null
 }
 
 // Base URL from environment or fallback
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://molek-school-backend-production.up.railway.app"
 console.log("API_BASE URL:", API_BASE)
 
-const DEBUG_URL = "https://molek-school-backend-production.up.railway.app/api/debug-cookies/"
+const DEBUG_URL = `${API_BASE}/api/debug-cookies/`
 
 const debugCookies = async () => {
   try {
     const res = await axios.get(DEBUG_URL, { withCredentials: true })
     console.log("Cookies seen by backend:", res.data)
+    localStorage.setItem("molekLogin_backendCookies", JSON.stringify(res.data))
   } catch (err) {
     console.error("Cookie debug failed:", err)
+    localStorage.setItem("molekLogin_debugError", err.message || "Unknown error")
   }
 }
 
@@ -35,7 +38,7 @@ const api = axios.create({
 
 // Request interceptor to attach CSRF token dynamically
 api.interceptors.request.use((config) => {
-  if (['post', 'put', 'patch', 'delete'].includes(config.method) && !config.headers['X-CSRFToken']) {
+  if (['post', 'put', 'patch', 'delete'].includes(config.method)) {
     const csrfToken = getCookie("csrftoken")
     if (csrfToken) {
       config.headers['X-CSRFToken'] = csrfToken
@@ -62,42 +65,38 @@ api.interceptors.response.use(
 
 // Auth endpoints (session-based)
 export const authAPI = {
-getCsrfToken: () => api.get("/api/csrf/"), // Custom CSRF endpoint
-login: async (username, password) => {
-  // 🔍 Log frontend cookies
-  const frontendCookies = document.cookie
-  console.log("Frontend cookies:", frontendCookies)
-  localStorage.setItem("molekLogin_frontendCookies", frontendCookies)
+  getCsrfToken: () => api.get("/api/csrf/"),
 
-  // 🔍 Auto-trigger backend cookie debug
-  try {
-    const res = await axios.get(DEBUG_URL, { withCredentials: true })
-    console.log("Cookies seen by backend:", res.data)
-    localStorage.setItem("molekLogin_backendCookies", JSON.stringify(res.data))
-  } catch (err) {
-    console.error("Cookie debug failed:", err)
-    localStorage.setItem("molekLogin_debugError", err.message || "Unknown error")
-  }
+  login: async (username, password) => {
+    const frontendCookies = document.cookie
+    console.log("Frontend cookies:", frontendCookies)
+    localStorage.setItem("molekLogin_frontendCookies", frontendCookies)
 
-  // 🔐 Prepare login payload
-  const params = new URLSearchParams()
-  params.append("username", username)
-  params.append("password", password)
+    await debugCookies()
 
-  // 🔍 Log before sending login
-  localStorage.setItem("molekLogin_attempt", JSON.stringify({
-    username,
-    timestamp: new Date().toISOString()
-  }))
+    const csrfToken = getCookie("csrftoken")
+    if (!csrfToken) {
+      console.warn("⚠️ CSRF token not found in cookies!")
+    }
 
-  return api.post("/admin/login/", params, {
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "X-CSRFToken": csrfToken
-    },
-    responseType: "text",
-  }) 
-},
+    const params = new URLSearchParams()
+    params.append("username", username)
+    params.append("password", password)
+
+    localStorage.setItem("molekLogin_attempt", JSON.stringify({
+      username,
+      timestamp: new Date().toISOString()
+    }))
+
+    return api.post("/admin/login/", params, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": csrfToken
+      },
+      responseType: "text",
+    })
+  },
+
   changePassword: (oldPassword, newPassword) => {
     const params = new URLSearchParams()
     params.append("old_password", oldPassword)
@@ -175,9 +174,10 @@ export const profileAPI = {
   },
 }
 
+// Persistent debug logs
 console.log("Frontend cookies:", localStorage.getItem("molekLogin_frontendCookies"))
-console.log("Backend cookies:", JSON.parse(localStorage.getItem("molekLogin_backendCookies")))
-console.log("Login attempt:", JSON.parse(localStorage.getItem("molekLogin_attempt")))
+console.log("Backend cookies:", JSON.parse(localStorage.getItem("molekLogin_backendCookies") || "{}"))
+console.log("Login attempt:", JSON.parse(localStorage.getItem("molekLogin_attempt") || "{}"))
 console.log("Debug error:", localStorage.getItem("molekLogin_debugError"))
 
 export default api
