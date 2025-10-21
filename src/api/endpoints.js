@@ -92,7 +92,8 @@ login: async (username, password) => {
 
   return api.post("/admin/login/", params, {
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": csrfToken
     },
     responseType: "text",
   }) 
