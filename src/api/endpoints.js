@@ -12,7 +12,7 @@ export function getCookie(name) {
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
   "https://molek-school-backend-production.up.railway.app"
-console.log("🌐 API_BASE URL:", API_BASE)
+console.log("🌐 API_BASE URL:vv", API_BASE)
 
 // --- Axios instance ---
 const api = axios.create({
