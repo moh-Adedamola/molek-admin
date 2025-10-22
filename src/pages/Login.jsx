@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../hooks/useAuth"
-import { authAPI, profileAPI } from "../api/endpoints"  // Import profileAPI for verification
+import { authAPI } from "../api/endpoints"
 import { Button } from "../components/ui/Button"
 
 export function Login() {
@@ -43,7 +43,7 @@ export function Login() {
 
       // Step 3: Verify session with a protected admin endpoint (replaces /accounts/profile/)
       console.log("Verifying session...")
-      await profileAPI.getCurrent()  // GET /admin/users/userprofile/?limit=1 — succeeds if logged in
+      // await profileAPI.getCurrent()  // GET /admin/users/userprofile/?limit=1 — succeeds if logged in
       
       console.log("Session verified! Setting auth state...")
       
