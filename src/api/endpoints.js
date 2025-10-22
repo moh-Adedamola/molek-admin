@@ -1,5 +1,4 @@
 import axios from "axios"
-console.log ("i am moh")
 
 // --- Utility: get cookie value ---
 export function getCookie(name) {
@@ -156,5 +155,18 @@ export const contentAPI = {
   },
   delete: (id) => api.delete(`/admin/content/contentitem/${id}/delete/`),
 }
+
+export const profileAPI = { 
+  getCurrent: async () => { 
+    try { 
+      const response = await usersAPI.list({ limit: 1 }) 
+      return response.data
+     } catch (error) { 
+      if ([401, 403].includes(error.response?.status)) { 
+        throw new Error("Session invalid - re-login required") 
+      } throw error }
+     },
+    
+  }
 
 export default api
