@@ -123,9 +123,19 @@ export const authAPI = {
 export const usersAPI = {
   list: (params = {}) => api.get("/api/userprofile/", { params }),
   get: (id) => api.get(`/admin/users/userprofile/${id}/`),
+  create: (data) => {
+    const formData = new FormData();
+    Object.keys(data).forEach((key) => {
+      formData.append(key, data[key]);
+    });
+    return api.post("/admin/users/userprofile/add/", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
   update: (id, data) => api.put(`/admin/users/userprofile/${id}/change/`, data),
   delete: (id) => api.delete(`/admin/users/userprofile/${id}/delete/`),
 };
+
 
 // ===========================
 // 🎓 STUDENTS API
@@ -133,6 +143,13 @@ export const usersAPI = {
 export const studentsAPI = {
   list: (params = {}) => api.get("/api/students/", { params }),
   get: (id) => api.get(`/admin/users/student/${id}/`),
+  create: (data) => {
+    const formData = new FormData();
+    Object.keys(data).forEach((key) => formData.append(key, data[key]));
+    return api.post("/admin/users/student/add/", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
   update: (id, data) => {
     const formData = new FormData();
     Object.keys(data).forEach((key) => formData.append(key, data[key]));
@@ -142,6 +159,7 @@ export const studentsAPI = {
   },
   delete: (id) => api.delete(`/admin/users/students/${id}/delete/`),
 };
+
 
 // ===========================
 // 📚 CONTENT API
