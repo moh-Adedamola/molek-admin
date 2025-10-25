@@ -122,66 +122,90 @@ export const authAPI = {
 // ===========================
 export const usersAPI = {
   list: (params = {}) => api.get("/api/userprofile/", { params }),
-  get: (id) => api.get(`/admin/users/userprofile/${id}/`),
+  get: (id) => api.get(`/api/userprofile/${id}/`),
   create: (data) => {
     const formData = new FormData();
     Object.keys(data).forEach((key) => {
       formData.append(key, data[key]);
     });
-    return api.post("/admin/users/userprofile/add/", formData, {
+    return api.post("/api/userprofile/", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
-  update: (id, data) => api.put(`/admin/users/userprofile/${id}/change/`, data),
-  delete: (id) => api.delete(`/admin/users/userprofile/${id}/delete/`),
+  update: (id, data) => {
+    const formData = new FormData();
+    Object.keys(data).forEach((key) => {
+      if (data[key] !== null && data[key] !== undefined) {  // Avoid appending null/undefined
+        formData.append(key, data[key]);
+      }
+    });
+    return api.put(`/api/userprofile/${id}/`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  delete: (id) => api.delete(`/api/userprofile/${id}/`),
 };
-
 
 // ===========================
 // 🎓 STUDENTS API
 // ===========================
 export const studentsAPI = {
   list: (params = {}) => api.get("/api/students/", { params }),
-  get: (id) => api.get(`/admin/users/student/${id}/`),
+  get: (id) => api.get(`/api/students/${id}/`),
   create: (data) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => formData.append(key, data[key]));
-    return api.post("/admin/users/student/add/", formData, {
+    Object.keys(data).forEach((key) => {
+      if (data[key] !== null && data[key] !== undefined) {
+        formData.append(key, data[key]);
+      }
+    });
+    return api.post("/api/students/", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
   update: (id, data) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => formData.append(key, data[key]));
-    return api.put(`/admin/users/student/${id}/change/`, formData, {
+    Object.keys(data).forEach((key) => {
+      if (data[key] !== null && data[key] !== undefined) {
+        formData.append(key, data[key]);
+      }
+    });
+    return api.put(`/api/students/${id}/`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
-  delete: (id) => api.delete(`/admin/users/students/${id}/delete/`),
+  delete: (id) => api.delete(`/api/students/${id}/`),
 };
 
 
 // ===========================
 // 📚 CONTENT API
 // ===========================
+
 export const contentAPI = {
-  list: (params = {}) => api.get("/api/contentitem/", { params }),
-  get: (id) => api.get(`/admin/content/contentitem/${id}/`),
+  // Admin CRUD (like users)
+  list: (params = {}) => api.get("/api/contentitem/", { params }),  // ?content_type=image&search=math
+  get: (id) => api.get(`/api/contentitem/${id}/`),
   create: (data) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => formData.append(key, data[key]));
-    return api.post("/admin/content/contentitem/add/", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    Object.keys(data).forEach((key) => {
+      if (data[key] !== null && data[key] !== undefined) formData.append(key, data[key]);
     });
+    return api.post("/api/contentitem/", formData, { headers: { "Content-Type": "multipart/form-data" } });
   },
   update: (id, data) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => formData.append(key, data[key]));
-    return api.put(`/admin/content/contentitem/${id}/change/`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    Object.keys(data).forEach((key) => {
+      if (data[key] !== null && data[key] !== undefined) formData.append(key, data[key]);
     });
+    return api.put(`/api/contentitem/${id}/`, formData, { headers: { "Content-Type": "multipart/form-data" } });
   },
-  delete: (id) => api.delete(`/admin/content/contentitem/${id}/delete/`),
+  delete: (id) => api.delete(`/api/contentitem/${id}/`),
+
+  // Fetch/Public (your existing)
+  publicList: () => api.get("/molek/content/public/"),  // Unauth fetch
+  listCreate: (params = {}) => api.get("/molek/content/", { params }),  // Teacher list + create
+  detail: (id) => api.get(`/molek/content/${id}/`),  // Detail/fetch single
 };
 
 export const profileAPI = {
