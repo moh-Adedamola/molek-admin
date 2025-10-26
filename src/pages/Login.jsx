@@ -11,85 +11,51 @@ export function Login() {
   const [error, setError] = useState("")
   const [formData, setFormData] = useState({ username: "", password: "" })
 
-  const handleAdminLogin = async (e) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
-    console.log("Login attempt:", formData.username)
-    console.log("Password length:", formData.password.length)
+const handleAdminLogin = async (e) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
+  console.log("Login attempt:", formData.username);
 
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters.")
-      setLoading(false)
-      return
-    }
-
-    try {
-      // Step 1: GET /admin/login/ to set csrftoken cookie
-      console.log("Fetching CSRF token...")
-      await authAPI.getCsrfToken()
-      
-      // Step 2: POST to authenticate (Axios follows 302 to /admin/, returns 200 HTML)
-      console.log("Sending login POST...")
-      const response = await authAPI.login(formData.username, formData.password)
-      
-      console.log("Response status:", response.status)
-      console.log("Response snippet:", response.data.substring(0, 500))  // For debugging HTML
-
-      // Basic success check: 200 status (post-redirect from Django)
-      if (response.status !== 200) {
-        throw new Error(`Login failed with status ${response.status}`)
-      }
-
-      // Step 3: Verify session with a protected admin endpoint (replaces /accounts/profile/)
-      console.log("Verifying session...")
-      await profileAPI.getCurrent()  // GET /admin/users/userprofile/?limit=1 — succeeds if logged in
-      
-      console.log("Session verified! Setting auth state...")
-      
-      // Step 4: Update auth state and navigate (before any hook-side fetches)
-      const user = { username: formData.username, role: 'admin' }
-      login(user, 'admin-session')
-      navigate("/")  // To Dashboard via routes.jsx — backend session cookie persists
-    } catch (err) {
-      console.error("Login error:", err)
-      
-      // Bypass legacy 404s (root / or /accounts/profile/)
-      const isLegacy404 = err.response?.status === 404 && 
-        (err.config?.url === '/' || err.config?.url?.includes('/accounts/profile/'));
-      if (isLegacy404) {
-        console.log("Bypassing legacy 404 on", err.config?.url || 'unknown' + "; proceeding to Dashboard.");
-        const user = { username: formData.username, role: 'admin' }
-        login(user, 'admin-session')
-        navigate("/")
-        setLoading(false)
-        return
-      }
-      
-      let errorMsg = "Login failed. Please check your credentials."
-      
-      if (err.response?.status === 403 || err.response?.status === 401) {
-        errorMsg = "Invalid username or password."
-      } else if (err.response?.status === 404 && !isLegacy404) {
-        errorMsg = "Server endpoint not found. Check admin setup."
-      } else if (err.message.includes("Network Error") || err.code === "ERR_NETWORK") {
-        errorMsg = "Network error. Check your connection."
-      } else if (typeof err.response?.data === 'string') {
-        // Fallback: Scan Django HTML for errors
-        const errorPhrases = [
-          'Please enter a correct username and password',
-          'Invalid username or password',
-          'This password did not match'
-        ]
-        const found = errorPhrases.find(phrase => err.response.data.includes(phrase))
-        if (found) errorMsg = found
-      }
-      
-      setError(errorMsg)
-    } finally {
-      setLoading(false)
-    }
+  if (formData.password.length < 8) {
+    setError("Password must be at least 8 characters.");
+    setLoading(false);
+    return;
   }
+
+  try {
+    // Step 1: Authenticate via JWT
+    const response = await authAPI.login(formData.username, formData.password);
+    const { access, refresh } = response.data;
+
+    // Step 2: Store tokens
+    localStorage.setItem("accessToken", access);
+    localStorage.setItem("refreshToken", refresh);
+
+    // Step 3: Verify access by fetching user profile
+    const profile = await profileAPI.getCurrent();
+    console.log("Session verified!", profile);
+
+    // Step 4: Update auth state and navigate
+    const user = { username: formData.username, role: profile.role || 'admin' };
+    login(user, 'jwt-session');
+    navigate("/");
+  } catch (err) {
+    console.error("Login error:", err);
+    let errorMsg = "Login failed. Please check your credentials.";
+
+    if (err.response?.status === 403 || err.response?.status === 401) {
+      errorMsg = "Invalid username or password.";
+    } else if (err.message.includes("Network Error") || err.code === "ERR_NETWORK") {
+      errorMsg = "Network error. Check your connection.";
+    }
+
+    setError(errorMsg);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center p-2 sm:p-4">
