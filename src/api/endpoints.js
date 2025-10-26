@@ -17,8 +17,9 @@ const api = axios.create({
 // Attach token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
-  if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
+  if (token && token !== "undefined") {
+    const authHeader = token.startsWith("eyJ") ? `Bearer ${token}` : `Token ${token}`;  // JWT starts with 'eyJ'
+    config.headers["Authorization"] = authHeader;
   }
   return config;
 });
@@ -42,8 +43,9 @@ api.interceptors.response.use(
         });
         const newAccessToken = res.data.access;
         localStorage.setItem("accessToken", newAccessToken);
-        api.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
-        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        const authHeader = newAccessToken.startsWith("eyJ") ? `Bearer ${newAccessToken}` : `Token ${newAccessToken}`;
+        api.defaults.headers.common["Authorization"] = authHeader;
+        originalRequest.headers["Authorization"] = authHeader;
         return api(originalRequest);
       } catch (refreshError) {
         localStorage.clear();
@@ -51,8 +53,10 @@ api.interceptors.response.use(
       }
     }
 
+    // If no refresh token (e.g., TokenAuth), or other 401/403, clear and redirect
     if ([401, 403].includes(error.response?.status)) {
       localStorage.clear();
+      delete api.defaults.headers.common["Authorization"];
       window.location.href = "/login";
     }
 
@@ -64,16 +68,57 @@ api.interceptors.response.use(
 export const authAPI = {
   login: async (username, password) => {
     const response = await api.post("/api/token/", { username, password });
-    const { access, refresh } = response.data;
-    localStorage.setItem("accessToken", access);
-    localStorage.setItem("refreshToken", refresh);
-    api.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+    
+    // Handle different backend response formats
+    let accessToken, refreshToken;
+    const data = response.data;
+    
+    console.log("Login Response Data:", data);  // Temporary log for debugging
+    
+    if (data.access && data.refresh) {
+      // Standard SimpleJWT
+      accessToken = data.access;
+      refreshToken = data.refresh;
+    } else if (data.token) {
+      // DRF TokenAuth (single token, no refresh)
+      accessToken = data.token.replace(/^Token\s+/, "");  // Strip "Token " prefix if present
+      refreshToken = null;
+    } else if (data.access_token && data.refresh_token) {
+      // Variant with underscores
+      accessToken = data.access_token;
+      refreshToken = data.refresh_token;
+    } else {
+      throw new Error("Unexpected login response format: " + JSON.stringify(data));
+    }
+    
+    // Validate token is not undefined or invalid
+    if (!accessToken || accessToken === "undefined") {
+      throw new Error("Invalid access token received from server");
+    }
+    
+    // Store tokens
+    localStorage.setItem("accessToken", accessToken);
+    if (refreshToken) {
+      localStorage.setItem("refreshToken", refreshToken);
+    }
+    
+    // Set header (use 'Token' for TokenAuth, 'Bearer' for JWT)
+    const authHeader = data.token ? `Token ${accessToken}` : `Bearer ${accessToken}`;
+    api.defaults.headers.common["Authorization"] = authHeader;
+    
     return response;
   },
 
   logout: () => {
     localStorage.clear();
     delete api.defaults.headers.common["Authorization"];
+  },
+
+  changePassword: async (oldPassword, newPassword) => {
+    return api.post("/api/change-password/", { 
+      old_password: oldPassword, 
+      new_password: newPassword 
+    });
   },
 };
 
@@ -157,8 +202,22 @@ export const contentAPI = {
 
 export const profileAPI = {
   getCurrent: async () => {
-    const response = await usersAPI.list({ limit: 1 });
-    return response.data;
+    try {
+      const response = await api.get("/api/me/");  // Adjust to your backend's current user endpoint, e.g., "/api/userprofile/me/"
+      return [response.data];  // Return as array for Login.jsx compatibility
+    } catch (error) {
+      console.error("Failed to fetch current profile:", error);
+      return [];
+    }
+  },
+  update: (data) => {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) formData.append(key, value);
+    });
+    return api.put("/api/me/", formData, {  // Adjust to your backend's update endpoint
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
 };
 

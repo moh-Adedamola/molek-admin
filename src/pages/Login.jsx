@@ -24,11 +24,17 @@ const handleAdminLogin = async (e) => {
 
   try {
     const response = await authAPI.login(formData.username, formData.password);
+    console.log("Stored accessToken:", localStorage.getItem("accessToken"));  // Temporary log to verify storage
+    
     const profile = await profileAPI.getCurrent();
 
     const user = {
       username: formData.username,
+      full_name: profile[0]?.full_name || `${profile[0]?.first_name || ''} ${profile[0]?.last_name || ''}`.trim() || formData.username,
       role: profile[0]?.role || "admin",
+      // Add other fields like id, email if available from profile
+      id: profile[0]?.id,
+      email: profile[0]?.email,
     };
 
     login(user, "jwt-session");
@@ -41,6 +47,8 @@ const handleAdminLogin = async (e) => {
       errorMsg = "Invalid username or password.";
     } else if (err.message.includes("Network Error")) {
       errorMsg = "Network error. Check your connection.";
+    } else if (err.message.includes("Invalid access token")) {
+      errorMsg = "Server returned invalid token. Contact support.";
     }
 
     setError(errorMsg);
