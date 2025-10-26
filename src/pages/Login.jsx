@@ -15,7 +15,6 @@ const handleAdminLogin = async (e) => {
   e.preventDefault();
   setError("");
   setLoading(true);
-  console.log("Login attempt:", formData.username);
 
   if (formData.password.length < 8) {
     setError("Password must be at least 8 characters.");
@@ -24,21 +23,15 @@ const handleAdminLogin = async (e) => {
   }
 
   try {
-    // Step 1: Authenticate via JWT
     const response = await authAPI.login(formData.username, formData.password);
-    const { access, refresh } = response.data;
-
-    // Step 2: Store tokens
-    localStorage.setItem("accessToken", access);
-    localStorage.setItem("refreshToken", refresh);
-
-    // Step 3: Verify access by fetching user profile
     const profile = await profileAPI.getCurrent();
-    console.log("Session verified!", profile);
 
-    // Step 4: Update auth state and navigate
-    const user = { username: formData.username, role: profile.role || 'admin' };
-    login(user, 'jwt-session');
+    const user = {
+      username: formData.username,
+      role: profile[0]?.role || "admin",
+    };
+
+    login(user, "jwt-session");
     navigate("/");
   } catch (err) {
     console.error("Login error:", err);
@@ -46,7 +39,7 @@ const handleAdminLogin = async (e) => {
 
     if (err.response?.status === 403 || err.response?.status === 401) {
       errorMsg = "Invalid username or password.";
-    } else if (err.message.includes("Network Error") || err.code === "ERR_NETWORK") {
+    } else if (err.message.includes("Network Error")) {
       errorMsg = "Network error. Check your connection.";
     }
 
@@ -55,6 +48,7 @@ const handleAdminLogin = async (e) => {
     setLoading(false);
   }
 };
+
 
 
   return (
