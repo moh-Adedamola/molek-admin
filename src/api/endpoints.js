@@ -7,41 +7,58 @@ const API_BASE =
 
 console.log("🌐 API_BASE URL:", API_BASE);
 
-// --- Utility: get cookie value ---
-export function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(";").shift();
-  return null;
-}
-
 // --- Axios instance ---
 const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: true, // ✅ include cookies in every request
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
   },
 });
 
-// --- Request Interceptor: attach CSRF dynamically ---
+// --- Attach token to every request ---
 api.interceptors.request.use((config) => {
-  const token = getCookie("csrftoken");
-  if (token && ["post", "put", "patch", "delete"].includes(config.method)) {
-    config.headers["X-CSRFToken"] = token;
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    config.headers["Authorization"] = `Bearer ${token}`;
   }
   return config;
 });
 
-// --- Response Interceptor: handle auth/session errors globally ---
+// --- Handle 401/403 globally ---
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      localStorage.getItem("refreshToken")
+    ) {
+      originalRequest._retry = true;
+      try {
+        const refreshRes = await axios.post(`${API_BASE}/api/token/refresh/`, {
+          refresh: localStorage.getItem("refreshToken"),
+        });
+        const newAccessToken = refreshRes.data.access;
+        localStorage.setItem("accessToken", newAccessToken);
+        api.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        console.error("🔒 Token refresh failed:", refreshError);
+        localStorage.clear();
+        window.location.href = "/login";
+      }
+    }
+
     if ([401, 403].includes(error.response?.status)) {
-      console.warn("🚫 Session invalid. Redirecting to /login ...");
+      console.warn("🚫 Unauthorized. Redirecting to login...");
+      localStorage.clear();
       window.location.href = "/login";
     }
+
     return Promise.reject(error);
   }
 );
@@ -50,70 +67,29 @@ api.interceptors.response.use(
 // 🔐 AUTH API
 // ===========================
 export const authAPI = {
-  // --- Fetch CSRF Token ---
-  getCsrfToken: async () => {
-    try {
-      console.log("🔹 Fetching CSRF token...");
-      const res = await fetch(`${API_BASE}/api/csrf/`, {
-        method: "GET",
-        credentials: "include", // ✅ necessary for cookies
-      });
-
-      if (!res.ok) throw new Error(`CSRF fetch failed (${res.status})`);
-      const data = await res.json();
-
-      console.log("✅ CSRF cookie set:", data);
-      const csrfToken =
-        data.csrftoken ||
-        (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] ||
-        null;
-
-      if (!csrfToken) console.warn("⚠️ CSRF token missing in cookies!");
-      return csrfToken;
-    } catch (error) {
-      console.error("❌ Failed to fetch CSRF:", error.message);
-      throw error;
-    }
-  },
-
-  // --- Login ---
   login: async (username, password) => {
     try {
-      // Step 1: Ensure CSRF cookie is set
-      const csrfToken = await authAPI.getCsrfToken();
-      console.log("🧩 Using CSRF Token:", csrfToken);
-
-      // Step 2: Prepare credentials
-      const params = new URLSearchParams();
-      params.append("username", username);
-      params.append("password", password);
-
-      // Step 3: Perform login
-      const response = await api.post("/admin/login/", params, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-CSRFToken": csrfToken,
-        },
-        withCredentials: true,
-        responseType: "text",
+      const response = await api.post("/api/token/", {
+        username,
+        password,
       });
 
-      console.log("✅ Login response:", response.status);
+      const { access, refresh } = response.data;
+      localStorage.setItem("accessToken", access);
+      localStorage.setItem("refreshToken", refresh);
+      api.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+
       return response;
     } catch (error) {
-      console.error("❌ Login error:", error);
+      console.error("❌ Login failed:", error);
       throw error;
     }
   },
 
-  changePassword: (oldPassword, newPassword) => {
-    const params = new URLSearchParams();
-    params.append("old_password", oldPassword);
-    params.append("new_password1", newPassword);
-    params.append("new_password2", newPassword);
-    return api.post("/admin/password_change/", params, {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    });
+  logout: () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    delete api.defaults.headers.common["Authorization"];
   },
 };
 
@@ -125,8 +101,10 @@ export const usersAPI = {
   get: (id) => api.get(`/api/userprofile/${id}/`),
   create: (data) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => {
-      formData.append(key, data[key]);
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        formData.append(key, value);
+      }
     });
     return api.post("/api/userprofile/", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -134,9 +112,9 @@ export const usersAPI = {
   },
   update: (id, data) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => {
-      if (data[key] !== null && data[key] !== undefined) {  // Avoid appending null/undefined
-        formData.append(key, data[key]);
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        formData.append(key, value);
       }
     });
     return api.put(`/api/userprofile/${id}/`, formData, {
@@ -154,9 +132,9 @@ export const studentsAPI = {
   get: (id) => api.get(`/api/students/${id}/`),
   create: (data) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => {
-      if (data[key] !== null && data[key] !== undefined) {
-        formData.append(key, data[key]);
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        formData.append(key, value);
       }
     });
     return api.post("/api/students/", formData, {
@@ -165,9 +143,9 @@ export const studentsAPI = {
   },
   update: (id, data) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => {
-      if (data[key] !== null && data[key] !== undefined) {
-        formData.append(key, data[key]);
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        formData.append(key, value);
       }
     });
     return api.put(`/api/students/${id}/`, formData, {
@@ -177,35 +155,38 @@ export const studentsAPI = {
   delete: (id) => api.delete(`/api/students/${id}/`),
 };
 
-
 // ===========================
 // 📚 CONTENT API
 // ===========================
-
 export const contentAPI = {
-  // Admin CRUD (like users)
-  list: (params = {}) => api.get("/api/contentitem/", { params }),  // ?content_type=image&search=math
+  list: (params = {}) => api.get("/api/contentitem/", { params }),
   get: (id) => api.get(`/api/contentitem/${id}/`),
   create: (data) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => {
-      if (data[key] !== null && data[key] !== undefined) formData.append(key, data[key]);
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        formData.append(key, value);
+      }
     });
-    return api.post("/api/contentitem/", formData, { headers: { "Content-Type": "multipart/form-data" } });
+    return api.post("/api/contentitem/", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
   update: (id, data) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => {
-      if (data[key] !== null && data[key] !== undefined) formData.append(key, data[key]);
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        formData.append(key, value);
+      }
     });
-    return api.put(`/api/contentitem/${id}/`, formData, { headers: { "Content-Type": "multipart/form-data" } });
+    return api.put(`/api/contentitem/${id}/`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
   delete: (id) => api.delete(`/api/contentitem/${id}/`),
-
-  // Fetch/Public (your existing)
-  publicList: () => api.get("/molek/content/public/"),  // Unauth fetch
-  listCreate: (params = {}) => api.get("/molek/content/", { params }),  // Teacher list + create
-  detail: (id) => api.get(`/molek/content/${id}/`),  // Detail/fetch single
+  publicList: () => api.get("/molek/content/public/"),
+  listCreate: (params = {}) => api.get("/molek/content/", { params }),
+  detail: (id) => api.get(`/molek/content/${id}/`),
 };
 
 export const profileAPI = {
