@@ -17,7 +17,7 @@ export default function Routes() {
 
   return (
     <ReactRoutes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace/> : <Login />} />
 
       <Route
         path="/"

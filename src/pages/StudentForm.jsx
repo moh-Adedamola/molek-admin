@@ -19,28 +19,27 @@ export function StudentForm() {
     state_of_origin: "",
     local_govt_area: "",
     class_level: "JSS1",
-    stream: "",
-    section: "",
+    stream: "General",
+    section: "A",
     parent_email: "",
     parent_phone_number: "",
     passport: null,
   })
-
   const [preview, setPreview] = useState(null)
 
+  // Fetch student data if editing
   useEffect(() => {
-    if (mode === "edit" && id) {
-      fetchStudent()
-    }
+    if (mode === "edit" && id) fetchStudent()
   }, [id, mode])
 
   const fetchStudent = async () => {
     try {
       const response = await studentsAPI.get(id)
-      setFormData(response.data)
-      if (response.data.passport_url) {
-        setPreview(response.data.passport_url)
-      }
+      setFormData({
+        ...response.data,
+        passport: null, // File cannot be prefilled
+      })
+      if (response.data.passport_url) setPreview(response.data.passport_url)
     } catch (error) {
       console.error("Failed to fetch student:", error)
     }
@@ -51,7 +50,7 @@ export function StudentForm() {
     if (file) {
       setFormData({ ...formData, passport: file })
       const reader = new FileReader()
-      reader.onload = (e) => setPreview(e.target.result)
+      reader.onload = (event) => setPreview(event.target.result)
       reader.readAsDataURL(file)
     }
   }
@@ -59,21 +58,19 @@ export function StudentForm() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+
     try {
-      const form = new FormData()
-      Object.entries(formData).forEach(([key, value]) => {
-        form.append(key, value)
-      })
-
-      if (mode === "create") {
-        await studentsAPI.create(form)
-      } else {
-        await studentsAPI.update(id, form)
-      }
-
+        if (mode === "create") {
+          await studentsAPI.create(formData)
+        } else {
+          await studentsAPI.update(id, formData)
+        }
       navigate("/students")
     } catch (error) {
       console.error("Failed to save student:", error)
+      if (error.response?.data) {
+        alert("Error: " + JSON.stringify(error.response.data, null, 2))
+      }
     } finally {
       setLoading(false)
     }
@@ -85,12 +82,16 @@ export function StudentForm() {
         {mode === "create" ? "Create New Student" : "Edit Student"}
       </h1>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Form Section */}
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+        encType="multipart/form-data"
+      >
+        {/* MAIN FORM */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg space-y-6">
 
           {/* PERSONAL INFO */}
-          <div>
+          <section>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
               Personal Information
             </h3>
@@ -113,12 +114,8 @@ export function StudentForm() {
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
               />
-
-              {/* Sex Dropdown */}
               <div>
-                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Sex
-                </label>
+                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Sex</label>
                 <select
                   value={formData.sex}
                   onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
@@ -129,15 +126,14 @@ export function StudentForm() {
                 </select>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* ACADEMIC INFO */}
-          <div>
+          <section>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
               Academic Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              
               {/* Class Level */}
               <div>
                 <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -146,6 +142,7 @@ export function StudentForm() {
                 <select
                   value={formData.class_level}
                   onChange={(e) => setFormData({ ...formData, class_level: e.target.value })}
+                  required
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="JSS1">JSS1</option>
@@ -157,17 +154,15 @@ export function StudentForm() {
                 </select>
               </div>
 
-              {/* Stream Dropdown */}
+              {/* Stream */}
               <div>
-                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Stream
-                </label>
+                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Stream</label>
                 <select
                   value={formData.stream}
                   onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
+                  required
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="">Select Stream</option>
                   <option value="Science">Science</option>
                   <option value="Commercial">Commercial</option>
                   <option value="Art">Art</option>
@@ -175,27 +170,25 @@ export function StudentForm() {
                 </select>
               </div>
 
-              {/* Section Dropdown */}
+              {/* Section */}
               <div>
-                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Section
-                </label>
+                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Section</label>
                 <select
                   value={formData.section}
                   onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                  required
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="">Select Section</option>
                   <option value="A">A</option>
                   <option value="B">B</option>
                   <option value="C">C</option>
                 </select>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* PARENT INFO */}
-          <div>
+          <section>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
               Parent Information
             </h3>
@@ -212,10 +205,10 @@ export function StudentForm() {
                 onChange={(e) => setFormData({ ...formData, parent_phone_number: e.target.value })}
               />
             </div>
-          </div>
+          </section>
 
           {/* ADDRESS INFO */}
-          <div>
+          <section>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
               Address Information
             </h3>
@@ -236,25 +229,20 @@ export function StudentForm() {
                 onChange={(e) => setFormData({ ...formData, local_govt_area: e.target.value })}
               />
             </div>
-          </div>
+          </section>
 
           {/* BUTTONS */}
           <div className="flex gap-4 pt-6">
             <Button type="submit" loading={loading} className="flex-1">
               {mode === "create" ? "Create Student" : "Update Student"} ❤️
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate("/students")}
-              className="flex-1"
-            >
+            <Button type="button" variant="secondary" onClick={() => navigate("/students")} className="flex-1">
               Cancel
             </Button>
           </div>
         </div>
 
-        {/* PASSPORT SECTION */}
+        {/* PASSPORT UPLOAD */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg h-fit">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Passport Photo</h3>
           <label className="block border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-2xl p-6 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">

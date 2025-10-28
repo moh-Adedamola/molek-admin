@@ -9,6 +9,7 @@ export function UserForm() {
   const { id } = useParams()
   const mode = id ? "edit" : "create"
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -16,11 +17,12 @@ export function UserForm() {
     last_name: "",
     phone_number: "",
     age: "",
-    sex: "M",
+    sex: "male", // ✅ corrected value
     address: "",
     state_of_origin: "",
     local_govt_area: "",
     role: "teacher",
+    password: "", // ✅ added for create mode
   })
 
   useEffect(() => {
@@ -35,12 +37,27 @@ export function UserForm() {
       setFormData(response.data)
     } catch (error) {
       console.error("Failed to fetch user:", error)
+      setError("Unable to fetch user data. Please try again later.")
     }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setError("")
+
+    // ✅ Basic validation
+    if (!formData.username || !formData.email || !formData.first_name || !formData.last_name) {
+      setError("Please fill in all required fields.")
+      setLoading(false)
+      return
+    }
+
+    if (mode === "create" && formData.password.length < 6) {
+      setError("Password must be at least 6 characters.")
+      setLoading(false)
+      return
+    }
 
     try {
       if (mode === "create") {
@@ -51,6 +68,7 @@ export function UserForm() {
       navigate("/users")
     } catch (error) {
       console.error("Failed to save user:", error)
+      setError("Failed to save user. Please check the fields and try again.")
     } finally {
       setLoading(false)
     }
@@ -62,7 +80,14 @@ export function UserForm() {
         {mode === "create" ? "Create New User" : "Edit User"}
       </h1>
 
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg space-y-6">
+        {/* Personal Info */}
         <div>
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
             Personal Information
@@ -105,9 +130,21 @@ export function UserForm() {
               value={formData.age}
               onChange={(e) => setFormData({ ...formData, age: e.target.value })}
             />
+
+            {/* ✅ Only show password field when creating */}
+            {mode === "create" && (
+              <Input
+                label="Password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+              />
+            )}
           </div>
         </div>
 
+        {/* Additional Info */}
         <div>
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
             Additional Information
@@ -119,8 +156,8 @@ export function UserForm() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
-                    value="M"
-                    checked={formData.sex === "M"}
+                    value="male"
+                    checked={formData.sex === "male"}
                     onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
                   />
                   <span>Male 👨</span>
@@ -128,14 +165,15 @@ export function UserForm() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
-                    value="F"
-                    checked={formData.sex === "F"}
+                    value="female"
+                    checked={formData.sex === "female"}
                     onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
                   />
                   <span>Female 👩</span>
                 </label>
               </div>
             </div>
+
             <div>
               <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Role</label>
               <select
@@ -148,6 +186,7 @@ export function UserForm() {
                 <option value="superadmin">Superadmin</option>
               </select>
             </div>
+
             <Input
               label="Address"
               value={formData.address}

@@ -203,8 +203,8 @@ export const contentAPI = {
 export const profileAPI = {
   getCurrent: async () => {
     try {
-      const response = await api.get("/api/me/");  // Adjust to your backend's current user endpoint, e.g., "/api/userprofile/me/"
-      return [response.data];  // Return as array for Login.jsx compatibility
+      const response = await api.get("/api/userprofile/");
+      return [response.data]; 
     } catch (error) {
       console.error("Failed to fetch current profile:", error);
       return [];
@@ -215,7 +215,7 @@ export const profileAPI = {
     Object.entries(data).forEach(([key, value]) => {
       if (value !== null && value !== undefined) formData.append(key, value);
     });
-    return api.put("/api/me/", formData, {  // Adjust to your backend's update endpoint
+    return api.put("/api/userprofile/", formData, { 
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
