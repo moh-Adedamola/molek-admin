@@ -111,6 +111,22 @@ export default function Routes() {
           </PrivateRoute>
         }
       />
+      <Route
+        path="/galleries"
+        element={
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+            <GalleryList />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/galleries/create"
+        element={
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+            <GalleryForm />
+          </PrivateRoute>
+        }
+    />
 
       <Route path="*" element={<NotFound />} />
     </ReactRoutes>

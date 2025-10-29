@@ -221,4 +221,17 @@ export const profileAPI = {
   },
 };
 
+export const galleriesAPI = {
+  list: (params = {}) => axios.get(`${BASE_URL}/galleries/`, { params }),
+  get: (id) => axios.get(`${API_BASE}/galleries/${id}/`),
+  create: (formData) => {
+    const config = { headers: { "Content-Type": "multipart/form-data" } };
+    return axios.post(`${API_BASE}/galleries/`, formData, config);
+  },
+  update: (id, formData) => {
+    const config = { headers: { "Content-Type": "multipart/form-data" } };
+    return axios.put(`${API_BASE}/galleries/${id}/`, formData, config);
+  },
+  delete: (id) => axios.delete(`${API_BASE}/galleries/${id}/`),
+};
 export default api;
