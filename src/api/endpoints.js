@@ -222,16 +222,33 @@ export const profileAPI = {
 };
 
 export const galleriesAPI = {
-  list: (params = {}) => axios.get(`${BASE_URL}/galleries/`, { params }),
-  get: (id) => axios.get(`${API_BASE}/galleries/${id}/`),
+  list: (params = {}) => axios.get(`${API_BASE}/molek/galleries/`, { params }),
+  get: (id) => axios.get(`${API_BASE}/molek/galleries/${id}/`),
   create: (formData) => {
-    const config = { headers: { "Content-Type": "multipart/form-data" } };
-    return axios.post(`${API_BASE}/galleries/`, formData, config);
+    const config = { 
+      headers: { 
+        "Content-Type": "multipart/form-data",
+        "Authorization": `Bearer ${localStorage.getItem('accessToken') || ''}`
+      } 
+    };
+    return axios.post(`${API_BASE}/molek/galleries/`, formData, config);
   },
   update: (id, formData) => {
-    const config = { headers: { "Content-Type": "multipart/form-data" } };
-    return axios.put(`${API_BASE}/galleries/${id}/`, formData, config);
+    const config = { 
+      headers: { 
+        "Content-Type": "multipart/form-data",
+        "Authorization": `Bearer ${localStorage.getItem('accessToken') || ''}` 
+      } 
+    };
+    return axios.put(`${API_BASE}/molek/galleries/${id}/`, formData, config); 
   },
-  delete: (id) => axios.delete(`${API_BASE}/galleries/${id}/`),
+  delete: (id) => {
+    const config = { 
+      headers: { 
+        "Authorization": `Bearer ${localStorage.getItem('accessToken') || ''}` 
+      } 
+    };
+    return axios.delete(`${API_BASE}/molek/galleries/${id}/`, config); 
+  },
 };
 export default api;

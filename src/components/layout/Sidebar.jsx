@@ -1,5 +1,3 @@
-"use client"
-
 import { Link, useLocation } from "react-router-dom"
 import { useState } from "react"
 import { useAuth } from "../../hooks/useAuth"
@@ -18,6 +16,7 @@ export function Sidebar() {
     { path: "/users", label: "Users", icon: "👥", roles: ["admin", "superadmin", "teacher"] },
     { path: "/students", label: "Students", icon: "📚", roles: ["admin", "superadmin", "teacher"] },
     { path: "/content", label: "Content", icon: "🎥", roles: ["admin", "superadmin", "teacher"] },
+    { path: "/galleries", label: "Galleries", icon: "🖼️", roles: ["admin", "superadmin", "teacher"] },
   ]
 
   return (

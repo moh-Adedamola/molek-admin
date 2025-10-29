@@ -14,7 +14,7 @@ export function GalleryForm() {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 20) {
-      setError("You can upload at most 20 images.");
+      setError("You can upload a maximum of 20 images.");
       return;
     }
     setError("");
@@ -29,7 +29,9 @@ export function GalleryForm() {
     }
 
     const formData = new FormData();
-    if (title) formData.append("title", title);
+    if (title.trim()) {
+      formData.append("title", title.trim());
+    }
     images.forEach((file) => {
       formData.append("images", file);
     });
@@ -41,7 +43,7 @@ export function GalleryForm() {
       await galleriesAPI.create(formData);
       navigate("/galleries");
     } catch (err) {
-      console.error("Upload failed:", err);
+      console.error("Failed to create gallery:", err);
       setError("Failed to upload gallery. Please try again.");
     } finally {
       setLoading(false);
@@ -81,7 +83,7 @@ export function GalleryForm() {
             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
           <p className="mt-2 text-sm text-gray-500">
-            Select 1–20 images. Supported formats: JPG, PNG, WEBP.
+            Select 1–20 images (JPG, PNG, WEBP). All images will be uploaded to Cloudinary.
           </p>
           {images.length > 0 && (
             <p className="mt-2 text-sm text-green-600 dark:text-green-400">
@@ -94,7 +96,12 @@ export function GalleryForm() {
           <Button type="submit" loading={loading} className="flex-1">
             Create Gallery 🖼️
           </Button>
-          <Button type="button" variant="secondary" onClick={() => navigate("/galleries")} className="flex-1">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate("/galleries")}
+            className="flex-1"
+          >
             Cancel
           </Button>
         </div>
