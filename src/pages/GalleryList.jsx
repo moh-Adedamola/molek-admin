@@ -56,7 +56,7 @@ export function GalleryList() {
     },
     {
       key: "image_count",
-      label: "Images",
+      label: "Media",
       render: (value) => (
         <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full px-3 py-1 text-sm font-semibold">
           {value} image{value !== 1 ? "s" : ""}

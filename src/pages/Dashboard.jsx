@@ -12,33 +12,33 @@ export function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      try {
-        const [usersRes, studentsRes, contentRes, galleriesRes] = await Promise.all([
-          usersAPI.list({ page_size: 1 }),
-          studentsAPI.list({ page_size: 1 }),
-          contentAPI.list({ page_size: 1 }),
-          galleriesAPI.list({ page_size: 1 }), // 👈 fetch gallery count
-        ]);
+useEffect(() => {
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      const [usersRes, studentsRes, contentRes, galleriesRes] = await Promise.all([
+        usersAPI.list({ page_size: 1 }),
+        studentsAPI.list({ page_size: 1 }),
+        contentAPI.list({ page_size: 1 }),
+        galleriesAPI.list(), 
+      ]);
 
-        setStats({
-          users: usersRes.data.count || 0,
-          students: studentsRes.data.count || 0,
-          content: contentRes.data.count || 0,
-          galleries: galleriesRes.data.count || 0, // 👈
-        });
-      } catch (error) {
-        console.error("Failed to fetch stats:", error);
-        setStats({ users: 0, students: 0, content: 0, galleries: 0 }); // 👈 include galleries
-      } finally {
-        setLoading(false);
-      }
-    };
+      setStats({
+        users: usersRes.data.count || 0,
+        students: studentsRes.data.count || 0,
+        content: contentRes.data.count || 0,
+        galleries: (galleriesRes.data || []).length, 
+      });
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+      setStats({ users: 0, students: 0, content: 0, galleries: 0 });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchStats();
-  }, []);
+  fetchStats();
+}, []);
 
   return (
     <div className="space-y-8">
