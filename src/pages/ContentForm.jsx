@@ -4,7 +4,7 @@ import { contentAPI } from "../api/endpoints"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 
-export function ContentForm() {
+export function ContentForm({ defaultContentType = "image" }) {
   const navigate = useNavigate()
   const { id } = useParams()
   const mode = id ? "edit" : "create"
@@ -12,7 +12,7 @@ export function ContentForm() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    content_type: "image",
+    content_type: defaultContentType,
     media: null,
     published: false,
     is_active: true,
@@ -72,37 +72,58 @@ export function ContentForm() {
     }
   }
 
-const handleSubmit = async (e) => {
-  e.preventDefault()
-  setLoading(true)
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
 
-  try {
-    const submitData = new FormData()
-    Object.keys(formData).forEach(key => {
-      if (key === 'media' && formData.media instanceof File) {
-        submitData.append(key, formData.media)
-      } else if (formData[key] !== null && formData[key] !== undefined) {
-        submitData.append(key, formData[key])
+    try {
+      if (mode === "create") {
+        // For create, send as multipart/form-data
+        const submitData = new FormData()
+        submitData.append('title', formData.title)
+        submitData.append('description', formData.description)
+        submitData.append('content_type', formData.content_type)
+        submitData.append('published', formData.published)
+        submitData.append('is_active', formData.is_active)
+        
+        // Add media file if exists
+        if (formData.media) {
+          submitData.append('media', formData.media)
+        }
+
+        await contentAPI.create(submitData)
+      } else {
+        // For update, send as multipart/form-data
+        const submitData = new FormData()
+        submitData.append('title', formData.title)
+        submitData.append('description', formData.description)
+        submitData.append('content_type', formData.content_type)
+        submitData.append('published', formData.published)
+        submitData.append('is_active', formData.is_active)
+        
+        // Only add media if a new file was selected
+        if (formData.media && formData.media instanceof File) {
+          submitData.append('media', formData.media)
+        }
+
+        await contentAPI.update(id, submitData)
       }
-    })
-
-    if (mode === "create") {
-      await contentAPI.create(submitData)
-    } else {
-      await contentAPI.update(id, submitData)
+      navigate(defaultContentType === "news" ? "/news" : "/content")
+    } catch (error) {
+      console.error("Failed to save content:", error)
+      console.error("Error response:", error.response?.data)
+      alert(`Failed to save: ${JSON.stringify(error.response?.data || error.message)}`)
+    } finally {
+      setLoading(false)
     }
-    navigate("/content")
-  } catch (error) {
-    console.error("Failed to save content:", error)
-  } finally {
-    setLoading(false)
   }
-}
+
+  const isNewsType = formData.content_type === "news"
 
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-        {mode === "create" ? "Create New Content" : "Edit Content"}
+        {mode === "create" ? "Create New" : "Edit"} {isNewsType ? "News Article" : "Content"}
       </h1>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -124,37 +145,49 @@ const handleSubmit = async (e) => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:outline-none"
-                  rows="4"
+                  rows={isNewsType ? "8" : "4"}
+                  placeholder={isNewsType ? "Write your news article content here..." : "Brief description..."}
                 />
               </div>
             </div>
           </div>
 
-          <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
-              Content Type
-            </h3>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="image"
-                  checked={formData.content_type === "image"}
-                  onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
-                />
-                <span>📸 Image</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="video"
-                  checked={formData.content_type === "video"}
-                  onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
-                />
-                <span>🎬 Video</span>
-              </label>
+          {defaultContentType === "image" && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
+                Content Type
+              </h3>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="image"
+                    checked={formData.content_type === "image"}
+                    onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
+                  />
+                  <span>📸 Image</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="video"
+                    checked={formData.content_type === "video"}
+                    onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
+                  />
+                  <span>🎬 Video</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="news"
+                    checked={formData.content_type === "news"}
+                    onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
+                  />
+                  <span>📰 News</span>
+                </label>
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
@@ -184,39 +217,46 @@ const handleSubmit = async (e) => {
 
           <div className="flex gap-4 pt-6">
             <Button type="submit" loading={loading} className="flex-1">
-              {mode === "create" ? "Create Content" : "Update Content"} ❤️
+              {mode === "create" ? "Create" : "Update"} {isNewsType ? "News" : "Content"} ✨
             </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate("/content")} className="flex-1">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate(defaultContentType === "news" ? "/news" : "/content")}
+              className="flex-1"
+            >
               Cancel
             </Button>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg h-fit">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            {formData.content_type === "image" ? "📸" : "🎬"} Media
-          </h3>
-          <label className="block border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-2xl p-6 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-            <div className="text-5xl mb-2">{formData.content_type === "image" ? "📸" : "🎬"}</div>
-            <p className="text-gray-600 dark:text-gray-400 font-semibold">Drop {formData.content_type} here</p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">or click to select</p>
-            <input
-              type="file"
-              accept={formData.content_type === "image" ? "image/*" : "video/*"}
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </label>
-          {preview && (
-            <div className="mt-4">
-              {formData.content_type === "image" ? (
-                <img src={preview || "/placeholder.svg"} alt="Preview" className="w-full rounded-xl" />
-              ) : (
-                <video src={preview} controls className="w-full rounded-xl" />
-              )}
-            </div>
-          )}
-        </div>
+        {!isNewsType && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg h-fit">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              {formData.content_type === "image" ? "📸" : "🎬"} Media
+            </h3>
+            <label className="block border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-2xl p-6 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+              <div className="text-5xl mb-2">{formData.content_type === "image" ? "📸" : "🎬"}</div>
+              <p className="text-gray-600 dark:text-gray-400 font-semibold">Drop {formData.content_type} here</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500">or click to select</p>
+              <input
+                type="file"
+                accept={formData.content_type === "image" ? "image/*" : "video/*"}
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+            {preview && (
+              <div className="mt-4">
+                {formData.content_type === "image" ? (
+                  <img src={preview} alt="Preview" className="w-full rounded-xl" />
+                ) : (
+                  <video src={preview} controls className="w-full rounded-xl" />
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </form>
     </div>
   )

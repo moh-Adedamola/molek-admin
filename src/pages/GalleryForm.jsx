@@ -19,7 +19,7 @@ const validateMediaFile = (file) => {
 
 // Custom hook for media management (now supports batch append)
 const useMediaUpload = (options = { maxFiles: 20, maxSizeMB: 50 }) => {
-  const { maxFiles, maxSizeMB } = options;
+  const { maxFiles } = options;
   const [media, setMedia] = useState([]);
   const [error, setError] = useState("");
 
@@ -47,81 +47,102 @@ const useMediaUpload = (options = { maxFiles: 20, maxSizeMB: 50 }) => {
   return { media, addFiles, removeFile, clearAll, error, setError };
 };
 
-// Reusable upload progress hook (simulates for UI; extend with axios onUploadProgress if backend supports)
+// Reusable upload progress hook
 const useUploadProgress = () => {
   const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState('idle'); // 'idle' | 'uploading' | 'complete' | 'error'
+  const [uploadStatus, setUploadStatus] = useState('idle'); // 'idle' | 'uploading' | 'complete' | 'error'
 
   const startUpload = () => {
-    setStatus('uploading');
+    setUploadStatus('uploading');
     setProgress(0);
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 95) {
           clearInterval(interval);
-          setTimeout(() => {
-            setProgress(100);
-            setStatus('complete');
-          }, 500); // Delay for "whoosh" effect
-          return prev + 5;
+          return 95;
         }
-        return prev + (Math.random() * 10 + 5); // Jitter for realism
+        return prev + (Math.random() * 10 + 5);
       });
-    }, 200); // ~2s total for small batches; scales visually
+    }, 200);
+    return interval;
+  };
+
+  const completeUpload = () => {
+    setProgress(100);
+    setUploadStatus('complete');
+  };
+
+  const failUpload = () => {
+    setUploadStatus('error');
   };
 
   const reset = () => {
     setProgress(0);
-    setStatus('idle');
+    setUploadStatus('idle');
   };
 
-  return { progress, status, startUpload, reset };
+  return { progress, uploadStatus, startUpload, completeUpload, failUpload, reset };
 };
 
 export function GalleryForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
-  const fileInputRef = useRef(null); // For programmatic trigger
-  const { media, addFiles, removeFile, error: mediaError, setError: setMediaError } = useMediaUpload();
-  const { progress, status, startUpload, reset } = useUploadProgress();
+  const fileInputRef = useRef(null);
+  const { media, addFiles, removeFile, clearAll, error: mediaError, setError: setMediaError } = useMediaUpload();
+  const { progress, uploadStatus, startUpload, completeUpload, failUpload, reset } = useUploadProgress();
 
   const handleFileChange = (e) => {
     const files = e.target.files;
     if (files.length > 0) {
       addFiles(files);
-      e.target.value = ""; // Reset for next selection
+      e.target.value = "";
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (media.length === 0) {
       setMediaError("Please select at least one media file.");
       return;
     }
 
     const formData = new FormData();
-    if (title.trim()) formData.append("title", title.trim());
-    media.forEach((file) => formData.append("media", file));
+    if (title.trim()) {
+      formData.append("title", title.trim());
+    }
+    media.forEach((file) => {
+      formData.append("media", file);
+    });
 
     setLoading(true);
-    startUpload(); // 👈 Kick off progress animation
-    setMediaError(""); // Clear prior errors
+    const uploadInterval = startUpload();
+    setMediaError("");
 
     try {
-      await galleriesAPI.create(formData);
-      // On success: Progress hits 100%, show complete
+      const response = await galleriesAPI.create(formData);
+      console.log('Gallery created successfully:', response.data);
+      
+      clearInterval(uploadInterval);
+      completeUpload();
+      
+      // Navigate after brief success display
       setTimeout(() => {
         navigate("/galleries");
-      }, 1000); // Brief celebration delay
+      }, 1000);
     } catch (err) {
       console.error("Failed to create gallery:", err);
-      setMediaError("Failed to upload gallery. Please try again.");
-      setStatus('error'); // Halt progress on error
+      clearInterval(uploadInterval);
+      failUpload();
+      
+      // Extract error message
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.detail ||
+                          'Failed to upload gallery. Please try again.';
+      setMediaError(errorMessage);
     } finally {
       setLoading(false);
-      if (status === 'complete') reset(); // Clean up post-nav
     }
   };
 
@@ -143,6 +164,7 @@ export function GalleryForm() {
             label="Gallery Title (Optional)"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter gallery title..."
           />
         </div>
 
@@ -153,16 +175,15 @@ export function GalleryForm() {
           <input
             ref={fileInputRef}
             type="file"
-            multiple  // 👈 Restored: Select many from one location
+            multiple
             accept="image/*,video/*"
             onChange={handleFileChange}
             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
           <p className="mt-2 text-sm text-gray-500">
-            Select multiple files from one folder, or use "Add Another" to pick from different locations (up to 20 total). Supports images (JPG/PNG/WEBP) and videos (MP4/MOV).
+            Select multiple files (up to 20 total). Supports images (JPG/PNG/WEBP) and videos (MP4/MOV).
           </p>
 
-          {/* 👈 Enhanced: File list with previews/sizes */}
           {media.length > 0 && (
             <div className="mt-4 space-y-2">
               <p className="text-sm text-green-600 dark:text-green-400 font-medium">
@@ -194,18 +215,18 @@ export function GalleryForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => fileInputRef.current?.click()}  // 👈 Trigger for another batch/location
+                  onClick={() => fileInputRef.current?.click()}
                   className="mt-2 w-full border-dashed border-2"
                 >
-                  Add More Files from Another Location 📁
+                  Add More Files 📁
                 </Button>
               )}
             </div>
           )}
         </div>
 
-        {/* 👈 New: Cute Progress Bar */}
-        {status === 'uploading' && (
+        {/* Progress Bar */}
+        {uploadStatus === 'uploading' && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
               <span>Uploading... {progress.toFixed(0)}%</span>
@@ -215,20 +236,25 @@ export function GalleryForm() {
               <div
                 className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-300 ease-out shadow-lg"
                 style={{ width: `${progress}%` }}
-              >
-                {progress >= 100 && status === 'complete' && (
-                  <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white animate-pulse">
-                    🎉 Complete!
-                  </span>
-                )}
-              </div>
+              />
             </div>
           </div>
         )}
 
+        {uploadStatus === 'complete' && (
+          <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-lg text-center font-semibold">
+            🎉 Gallery created successfully! Redirecting...
+          </div>
+        )}
+
         <div className="flex gap-4 pt-6">
-          <Button type="submit" loading={loading || status === 'uploading'} disabled={status === 'uploading'} className="flex-1">
-            {status === 'complete' ? 'All Done! 🎊' : 'Create Gallery 📸🎥'}
+          <Button 
+            type="submit" 
+            loading={loading || uploadStatus === 'uploading'} 
+            disabled={uploadStatus === 'uploading' || media.length === 0}
+            className="flex-1"
+          >
+            {uploadStatus === 'complete' ? 'All Done! 🎊' : 'Create Gallery 📸🎥'}
           </Button>
           <Button
             type="button"
@@ -239,7 +265,7 @@ export function GalleryForm() {
               navigate("/galleries");
             }}
             className="flex-1"
-            disabled={status === 'uploading'}
+            disabled={uploadStatus === 'uploading'}
           >
             Cancel
           </Button>

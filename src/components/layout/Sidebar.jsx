@@ -12,11 +12,36 @@ export function Sidebar() {
   }
 
   const navItems = [
-    { path: "/", label: "Dashboard", icon: "🏠", roles: ["admin", "superadmin", "teacher"] },
-    { path: "/users", label: "Users", icon: "👥", roles: ["admin", "superadmin", "teacher"] },
-    { path: "/students", label: "Students", icon: "📚", roles: ["admin", "superadmin", "teacher"] },
-    { path: "/content", label: "Content", icon: "🎥", roles: ["admin", "superadmin", "teacher"] },
-    { path: "/galleries", label: "Galleries", icon: "🖼️", roles: ["admin", "superadmin", "teacher"] },
+    { 
+      path: "/", 
+      label: "Dashboard", 
+      icon: "🏠", 
+      roles: ["admin", "superadmin"] 
+    },
+    { 
+      path: "/admins", 
+      label: "Admins", 
+      icon: "👥", 
+      roles: ["admin", "superadmin"] 
+    },
+    { 
+      path: "/content", 
+      label: "Content", 
+      icon: "🎥", 
+      roles: ["admin", "superadmin"] 
+    },
+    { 
+      path: "/news", 
+      label: "News", 
+      icon: "📰", 
+      roles: ["admin", "superadmin"] 
+    },
+    { 
+      path: "/galleries", 
+      label: "Galleries", 
+      icon: "🖼️", 
+      roles: ["admin", "superadmin"] 
+    },
   ]
 
   return (

@@ -18,13 +18,13 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
   if (token && token !== "undefined") {
-    const authHeader = token.startsWith("eyJ") ? `Bearer ${token}` : `Token ${token}`;  // JWT starts with 'eyJ'
+    const authHeader = token.startsWith("eyJ") ? `Bearer ${token}` : `Token ${token}`;
     config.headers["Authorization"] = authHeader;
   }
   return config;
 });
 
-// Handle token expiration
+// Handle token expiration and refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -53,7 +53,7 @@ api.interceptors.response.use(
       }
     }
 
-    // If no refresh token (e.g., TokenAuth), or other 401/403, clear and redirect
+    // If no refresh token or other 401/403, clear and redirect
     if ([401, 403].includes(error.response?.status)) {
       localStorage.clear();
       delete api.defaults.headers.common["Authorization"];
@@ -64,34 +64,31 @@ api.interceptors.response.use(
   }
 );
 
-// 🔐 AUTH API
+// ============================================
+// 🔐 AUTHENTICATION API
+// ============================================
 export const authAPI = {
   login: async (username, password) => {
     const response = await api.post("/api/token/", { username, password });
     
-    // Handle different backend response formats
     let accessToken, refreshToken;
     const data = response.data;
     
-    console.log("Login Response Data:", data);  // Temporary log for debugging
+    console.log("Login Response Data:", data);
     
     if (data.access && data.refresh) {
       // Standard SimpleJWT
       accessToken = data.access;
       refreshToken = data.refresh;
     } else if (data.token) {
-      // DRF TokenAuth (single token, no refresh)
-      accessToken = data.token.replace(/^Token\s+/, "");  // Strip "Token " prefix if present
+      // DRF TokenAuth
+      accessToken = data.token.replace(/^Token\s+/, "");
       refreshToken = null;
-    } else if (data.access_token && data.refresh_token) {
-      // Variant with underscores
-      accessToken = data.access_token;
-      refreshToken = data.refresh_token;
     } else {
       throw new Error("Unexpected login response format: " + JSON.stringify(data));
     }
     
-    // Validate token is not undefined or invalid
+    // Validate token
     if (!accessToken || accessToken === "undefined") {
       throw new Error("Invalid access token received from server");
     }
@@ -102,7 +99,7 @@ export const authAPI = {
       localStorage.setItem("refreshToken", refreshToken);
     }
     
-    // Set header (use 'Token' for TokenAuth, 'Bearer' for JWT)
+    // Set header
     const authHeader = data.token ? `Token ${accessToken}` : `Bearer ${accessToken}`;
     api.defaults.headers.common["Authorization"] = authHeader;
     
@@ -115,140 +112,83 @@ export const authAPI = {
   },
 
   changePassword: async (oldPassword, newPassword) => {
-    return api.post("/api/change-password/", { 
+    return api.post("/api/users/profile/change-password/", { 
       old_password: oldPassword, 
       new_password: newPassword 
     });
   },
 };
 
-// 👥 USERS API
-export const usersAPI = {
-  list: (params = {}) => api.get("/api/userprofile/", { params }),
-  get: (id) => api.get(`/api/userprofile/${id}/`),
-  create: (data) => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) formData.append(key, value);
-    });
-    return api.post("/api/userprofile/", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  },
-  update: (id, data) => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) formData.append(key, value);
-    });
-    return api.put(`/api/userprofile/${id}/`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  },
-  delete: (id) => api.delete(`/api/userprofile/${id}/`),
+// ============================================
+// 👥 ADMIN MANAGEMENT API
+// ============================================
+export const adminsAPI = {
+  list: (params = {}) => api.get("/api/admins/", { params }),
+  get: (id) => api.get(`/api/admins/${id}/`),
+  create: (data) => api.post("/api/admins/", data, {
+    headers: { "Content-Type": "application/json" },
+  }),
+  update: (id, data) => api.put(`/api/admins/${id}/`, data, {
+    headers: { "Content-Type": "application/json" },
+  }),
+  delete: (id) => api.delete(`/api/admins/${id}/`),
+  stats: () => api.get("/api/admins/stats/"),
 };
 
-// 🎓 STUDENTS API
-export const studentsAPI = {
-  list: (params = {}) => api.get("/api/students/", { params }),
-  get: (id) => api.get(`/api/students/${id}/`),
-  create: (data) => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) formData.append(key, value);
-    });
-    return api.post("/api/students/", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  },
-  update: (id, data) => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) formData.append(key, value);
-    });
-    return api.put(`/api/students/${id}/`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  },
-  delete: (id) => api.delete(`/api/students/${id}/`),
-};
-
-// 📚 CONTENT API
+// ============================================
+// 📚 CONTENT API (Images, Videos, News)
+// ============================================
 export const contentAPI = {
-  list: (params = {}) => api.get("/api/contentitem/", { params }),
-  get: (id) => api.get(`/api/contentitem/${id}/`),
-  create: (data) => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) formData.append(key, value);
-    });
-    return api.post("/api/contentitem/", formData, {
+  list: (params = {}) => api.get("/api/content/", { params }),
+  get: (id) => api.get(`/api/content/${id}/`),
+  create: (formData) => {
+    // formData is already FormData from the component
+    return api.post("/api/content/", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
-  update: (id, data) => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) formData.append(key, value);
-    });
-    return api.put(`/api/contentitem/${id}/`, formData, {
+  update: (id, formData) => {
+    // formData is already FormData from the component
+    return api.put(`/api/content/${id}/`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
-  delete: (id) => api.delete(`/api/contentitem/${id}/`),
-  publicList: () => api.get("/molek/content/public/"),
-  listCreate: (params = {}) => api.get("/molek/content/", { params }),
-  detail: (id) => api.get(`/molek/content/${id}/`),
+  delete: (id) => api.delete(`/api/content/${id}/`),
+  publicList: (params = {}) => api.get("/api/content/public/", { params }),
+  stats: () => api.get("/api/content/stats/"),
 };
 
+// ============================================
+// 🖼️ GALLERY API
+// ============================================
+export const galleriesAPI = {
+  list: (params = {}) => api.get("/api/galleries/", { params }),
+  get: (id) => api.get(`/api/galleries/${id}/`),
+  create: (formData) => api.post("/api/galleries/", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  }),
+  update: (id, formData) => api.put(`/api/galleries/${id}/`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  }),
+  delete: (id) => api.delete(`/api/galleries/${id}/`),
+};
+
+// ============================================
+// 👤 PROFILE API
+// ============================================
 export const profileAPI = {
   getCurrent: async () => {
     try {
-      const response = await api.get("/api/userprofile/");
-      return [response.data]; 
+      const response = await api.get("/api/users/profile/");
+      return response.data;
     } catch (error) {
       console.error("Failed to fetch current profile:", error);
-      return [];
+      throw error;
     }
   },
-  update: (data) => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) formData.append(key, value);
-    });
-    return api.put("/api/userprofile/", formData, { 
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  },
+  update: (data) => api.put("/api/users/profile/", data, {
+    headers: { "Content-Type": "application/json" },
+  }),
 };
 
-export const galleriesAPI = {
-  list: (params = {}) => axios.get(`${API_BASE}/molek/galleries/`, { params }),
-  get: (id) => axios.get(`${API_BASE}/molek/galleries/${id}/`),
-  create: (formData) => {
-    const config = { 
-      headers: { 
-        "Content-Type": "multipart/form-data",
-        "Authorization": `Bearer ${localStorage.getItem('accessToken') || ''}`
-      } 
-    };
-    return axios.post(`${API_BASE}/molek/galleries/`, formData, config);
-  },
-  update: (id, formData) => {
-    const config = { 
-      headers: { 
-        "Content-Type": "multipart/form-data",
-        "Authorization": `Bearer ${localStorage.getItem('accessToken') || ''}` 
-      } 
-    };
-    return axios.put(`${API_BASE}/molek/galleries/${id}/`, formData, config); 
-  },
-  delete: (id) => {
-    const config = { 
-      headers: { 
-        "Authorization": `Bearer ${localStorage.getItem('accessToken') || ''}` 
-      } 
-    };
-    return axios.delete(`${API_BASE}/molek/galleries/${id}/`, config); 
-  },
-};
 export default api;

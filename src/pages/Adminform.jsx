@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { usersAPI } from "../api/endpoints"
+import { adminsAPI } from "../api/endpoints"
+import { useAuth } from "../hooks/useAuth"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 
-export function UserForm() {
+export function AdminForm() {
   const navigate = useNavigate()
   const { id } = useParams()
+  const { user } = useAuth()
   const mode = id ? "edit" : "create"
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -17,27 +19,31 @@ export function UserForm() {
     last_name: "",
     phone_number: "",
     age: "",
-    sex: "male", // ✅ corrected value
+    sex: "male",
     address: "",
     state_of_origin: "",
     local_govt_area: "",
-    role: "teacher",
-    password: "", // ✅ added for create mode
+    role: "admin",
+    password: "",
   })
 
   useEffect(() => {
     if (mode === "edit" && id) {
-      fetchUser()
+      fetchAdmin()
     }
   }, [id, mode])
 
-  const fetchUser = async () => {
+  const fetchAdmin = async () => {
     try {
-      const response = await usersAPI.get(id)
-      setFormData(response.data)
+      const response = await adminsAPI.get(id)
+      const data = response.data
+      setFormData({
+        ...data,
+        password: "", // Never populate password field
+      })
     } catch (error) {
-      console.error("Failed to fetch user:", error)
-      setError("Unable to fetch user data. Please try again later.")
+      console.error("Failed to fetch admin:", error)
+      setError("Unable to fetch admin data. Please try again later.")
     }
   }
 
@@ -46,29 +52,41 @@ export function UserForm() {
     setLoading(true)
     setError("")
 
-    // ✅ Basic validation
+    // Validation
     if (!formData.username || !formData.email || !formData.first_name || !formData.last_name) {
       setError("Please fill in all required fields.")
       setLoading(false)
       return
     }
 
-    if (mode === "create" && formData.password.length < 6) {
-      setError("Password must be at least 6 characters.")
+    if (mode === "create" && formData.password.length < 8) {
+      setError("Password must be at least 8 characters.")
+      setLoading(false)
+      return
+    }
+
+    // Prevent regular admins from creating superadmins
+    if (user?.role === 'admin' && formData.role === 'superadmin') {
+      setError("Only superadmins can create other superadmins.")
       setLoading(false)
       return
     }
 
     try {
-      if (mode === "create") {
-        await usersAPI.create(formData)
-      } else {
-        await usersAPI.update(id, formData)
+      const submitData = { ...formData }
+      if (mode === "edit" && !submitData.password) {
+        delete submitData.password // Don't send empty password on edit
       }
-      navigate("/users")
+
+      if (mode === "create") {
+        await adminsAPI.create(submitData)
+      } else {
+        await adminsAPI.update(id, submitData)
+      }
+      navigate("/admins")
     } catch (error) {
-      console.error("Failed to save user:", error)
-      setError("Failed to save user. Please check the fields and try again.")
+      console.error("Failed to save admin:", error)
+      setError(error.response?.data?.detail || "Failed to save admin. Please check the fields and try again.")
     } finally {
       setLoading(false)
     }
@@ -77,7 +95,7 @@ export function UserForm() {
   return (
     <div className="max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-        {mode === "create" ? "Create New User" : "Edit User"}
+        {mode === "create" ? "Create New Admin" : "Edit Admin"}
       </h1>
 
       {error && (
@@ -131,7 +149,6 @@ export function UserForm() {
               onChange={(e) => setFormData({ ...formData, age: e.target.value })}
             />
 
-            {/* ✅ Only show password field when creating */}
             {mode === "create" && (
               <Input
                 label="Password"
@@ -180,11 +197,14 @@ export function UserForm() {
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                disabled={user?.role === 'admin' && formData.role === 'superadmin'} // Admins can't change superadmins
               >
-                <option value="teacher">Teacher</option>
-                <option value="admin">Admin</option>
-                <option value="superadmin">Superadmin</option>
+                <option value="admin">🔑 Admin</option>
+                {user?.role === 'superadmin' && <option value="superadmin">⭐ Superadmin</option>}
               </select>
+              {user?.role === 'admin' && (
+                <p className="text-xs text-gray-500 mt-1">Only superadmins can create superadmins</p>
+              )}
             </div>
 
             <Input
@@ -207,9 +227,9 @@ export function UserForm() {
 
         <div className="flex gap-4 pt-6">
           <Button type="submit" loading={loading} className="flex-1">
-            {mode === "create" ? "Create User" : "Update User"} ❤️
+            {mode === "create" ? "Create Admin" : "Update Admin"} ✨
           </Button>
-          <Button type="button" variant="secondary" onClick={() => navigate("/users")} className="flex-1">
+          <Button type="button" variant="secondary" onClick={() => navigate("/admins")} className="flex-1">
             Cancel
           </Button>
         </div>

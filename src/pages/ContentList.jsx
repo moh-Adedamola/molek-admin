@@ -5,34 +5,34 @@ import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 import { Modal } from "../components/ui/Modal"
 
-export function ContentList() {
+export function ContentList({ defaultContentType = "all", pageTitle = "Content Management" }) {
   const navigate = useNavigate()
   const [content, setContent] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
-  const [typeFilter, setTypeFilter] = useState("all")
+  const [typeFilter, setTypeFilter] = useState(defaultContentType)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, contentId: null })
   const [previewModal, setPreviewModal] = useState({ isOpen: false, item: null })
 
   useEffect(() => {
     fetchContent()
   }, [search, typeFilter])
-  
-const fetchContent = async () => {
-  setLoading(true)
-  try {
-    const params = {}
-    if (search) params.search = search
-    if (typeFilter !== "all") params.content_type = typeFilter
 
-    const response = await contentAPI.list(params)
-    setContent(response.data.results || response.data || [])  // Fallback to empty array
-  } catch (error) {
-    console.error("Failed to fetch content:", error)
-  } finally {
-    setLoading(false)
+  const fetchContent = async () => {
+    setLoading(true)
+    try {
+      const params = {}
+      if (search) params.search = search
+      if (typeFilter !== "all") params.content_type = typeFilter
+
+      const response = await contentAPI.list(params)
+      setContent(response.data.results || response.data || [])
+    } catch (error) {
+      console.error("Failed to fetch content:", error)
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   const handleDelete = async () => {
     try {
@@ -53,35 +53,51 @@ const fetchContent = async () => {
     }
   }
 
+  const getTypeIcon = (type) => {
+    const icons = {
+      image: "📸",
+      video: "🎬",
+      news: "📰"
+    }
+    return icons[type] || "📄"
+  }
+
+  const createPath = defaultContentType === "news" ? "/news/create" : "/content/create"
+  const editPath = (id) => defaultContentType === "news" ? `/news/${id}/edit` : `/content/${id}/edit`
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Content Management</h1>
-        <Button onClick={() => navigate("/content/create")}>Add Content +</Button>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{pageTitle}</h1>
+        <Button onClick={() => navigate(createPath)}>
+          Add {defaultContentType === "news" ? "News" : "Content"} +
+        </Button>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
         <Input
-          placeholder="Search content..."
+          placeholder={`Search ${defaultContentType === "news" ? "news" : "content"}...`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1"
         />
-        <div className="flex gap-2">
-          {["all", "image", "video"].map((type) => (
-            <button
-              key={type}
-              onClick={() => setTypeFilter(type)}
-              className={`px-4 py-3 rounded-xl font-semibold transition-all ${
-                typeFilter === type
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300"
-              }`}
-            >
-              {type === "all" ? "All" : type === "image" ? "📸 Images" : "🎬 Videos"}
-            </button>
-          ))}
-        </div>
+        {defaultContentType === "all" && (
+          <div className="flex gap-2">
+            {["all", "image", "video", "news"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setTypeFilter(type)}
+                className={`px-4 py-3 rounded-xl font-semibold transition-all ${
+                  typeFilter === type
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300"
+                }`}
+              >
+                {type === "all" ? "All" : `${getTypeIcon(type)} ${type.charAt(0).toUpperCase() + type.slice(1)}`}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -98,11 +114,11 @@ const fetchContent = async () => {
               className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow"
             >
               <div className="flex flex-col md:flex-row gap-6">
-                {item.media_url && (
+                {item.media_url && item.content_type !== 'news' && (
                   <div className="md:w-32 h-32 flex-shrink-0">
                     {item.content_type === "image" ? (
                       <img
-                        src={item.media_url || "/placeholder.svg"}
+                        src={item.media_url}
                         alt={item.title}
                         className="w-full h-full object-cover rounded-xl cursor-pointer"
                         onClick={() => setPreviewModal({ isOpen: true, item })}
@@ -121,7 +137,7 @@ const fetchContent = async () => {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white">{item.title}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {item.content_type === "image" ? "📸" : "🎬"} {item.content_type.toUpperCase()}
+                        {getTypeIcon(item.content_type)} {item.content_type_display || item.content_type.toUpperCase()}
                       </p>
                     </div>
                     <span
@@ -137,7 +153,7 @@ const fetchContent = async () => {
                   <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">{item.description}</p>
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-500 dark:text-gray-500">
-                      By {item.created_by?.full_name} • {new Date(item.publish_date).toLocaleDateString()}
+                      By {item.created_by?.full_name || "Admin"} • {new Date(item.publish_date).toLocaleDateString()}
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -146,7 +162,7 @@ const fetchContent = async () => {
                       >
                         {item.published ? "Unpublish" : "Publish"}
                       </button>
-                      <Button size="sm" onClick={() => navigate(`/content/${item.id}/edit`)}>
+                      <Button size="sm" onClick={() => navigate(editPath(item.id))}>
                         Edit
                       </Button>
                       <Button
@@ -175,7 +191,7 @@ const fetchContent = async () => {
         ]}
       >
         <p className="text-gray-600 dark:text-gray-400">
-          Are you sure you want to delete this content? This action cannot be undone. 😢
+          Are you sure you want to delete this content? This action cannot be undone.
         </p>
       </Modal>
 
@@ -186,7 +202,7 @@ const fetchContent = async () => {
       >
         {previewModal.item?.content_type === "image" ? (
           <img
-            src={previewModal.item?.media_url || "/placeholder.svg"}
+            src={previewModal.item?.media_url}
             alt={previewModal.item?.title}
             className="w-full rounded-xl"
           />

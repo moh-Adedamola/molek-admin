@@ -3,14 +3,12 @@ import { useAuth } from "./hooks/useAuth"
 import { PrivateRoute } from "./components/layout/PrivateRoute"
 import { Login } from "./pages/Login"
 import { Dashboard } from "./pages/Dashboard"
-import { UsersList } from "./pages/UsersList"
-import { UserForm } from "./pages/UserForm"
-import { StudentsList } from "./pages/StudentsList"
-import { StudentForm } from "./pages/StudentForm"
+import { AdminsList } from "./pages/AdminsList"
+import { AdminForm } from "./pages/AdminForm"
 import { ContentList } from "./pages/ContentList"
+import { ContentForm } from "./pages/ContentForm"
 import { GalleryList } from "./pages/GalleryList"
 import { GalleryForm } from "./pages/GalleryForm"
-import { ContentForm } from "./pages/ContentForm"
 import { Profile } from "./pages/Profile"
 import { NotFound } from "./pages/NotFound"
 
@@ -19,71 +17,53 @@ export default function Routes() {
 
   return (
     <ReactRoutes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace/> : <Login />} />
+      {/* Public Route */}
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+      />
 
+      {/* Dashboard */}
       <Route
         path="/"
         element={
-          <PrivateRoute>
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
             <Dashboard />
           </PrivateRoute>
         }
       />
 
+      {/* Admin Management */}
       <Route
-        path="/users"
+        path="/admins"
         element={
-          <PrivateRoute requiredRoles={["admin", "superadmin", "teacher"]}>
-            <UsersList />
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+            <AdminsList />
           </PrivateRoute>
         }
       />
       <Route
-        path="/users/create"
+        path="/admins/create"
         element={
-          <PrivateRoute requiredRoles={["admin", "superadmin", "teacher"]}>
-            <UserForm />
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+            <AdminForm />
           </PrivateRoute>
         }
       />
       <Route
-        path="/users/:id/edit"
+        path="/admins/:id/edit"
         element={
-          <PrivateRoute requiredRoles={["admin", "superadmin", "teacher"]}>
-            <UserForm />
-          </PrivateRoute>
-        }
-      />
-
-      <Route
-        path="/students"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin", "teacher"]}>
-            <StudentsList />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/students/create"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin", "teacher"]}>
-            <StudentForm />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/students/:id/edit"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin", "teacher"]}>
-            <StudentForm />
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+            <AdminForm />
           </PrivateRoute>
         }
       />
 
+      {/* Content Management (Images/Videos) */}
       <Route
         path="/content"
         element={
-          <PrivateRoute requiredRoles={["admin", "superadmin", "teacher"]}>
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
             <ContentList />
           </PrivateRoute>
         }
@@ -91,7 +71,7 @@ export default function Routes() {
       <Route
         path="/content/create"
         element={
-          <PrivateRoute requiredRoles={["admin", "superadmin", "teacher"]}>
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
             <ContentForm />
           </PrivateRoute>
         }
@@ -99,20 +79,39 @@ export default function Routes() {
       <Route
         path="/content/:id/edit"
         element={
-          <PrivateRoute requiredRoles={["admin", "superadmin", "teacher"]}>
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
             <ContentForm />
           </PrivateRoute>
         }
       />
 
+      {/* News Management (uses ContentList with filter) */}
       <Route
-        path="/profile"
+        path="/news"
         element={
-          <PrivateRoute>
-            <Profile />
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+            <ContentList defaultContentType="news" pageTitle="News Management" />
           </PrivateRoute>
         }
       />
+      <Route
+        path="/news/create"
+        element={
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+            <ContentForm defaultContentType="news" />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/news/:id/edit"
+        element={
+          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+            <ContentForm />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Gallery Management */}
       <Route
         path="/galleries"
         element={
@@ -128,8 +127,19 @@ export default function Routes() {
             <GalleryForm />
           </PrivateRoute>
         }
-    />
+      />
 
+      {/* Profile */}
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <Profile />
+          </PrivateRoute>
+        }
+      />
+
+      {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </ReactRoutes>
   )

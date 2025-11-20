@@ -1,4 +1,3 @@
-
 import { Navigate } from "react-router-dom"
 import { useAuth } from "../../hooks/useAuth"
 import { MainLayout } from "./MainLayout"
@@ -11,7 +10,7 @@ export function PrivateRoute({ children, requiredRoles = [] }) {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="text-6xl mb-4 animate-spin">⏳</div>
-          <p className="text-xl text-gray-600">Loading...</p>
+          <p className="text-xl text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     )
@@ -28,7 +27,9 @@ export function PrivateRoute({ children, requiredRoles = [] }) {
           <div className="text-center">
             <div className="text-6xl mb-4">🔒</div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h1>
-            <p className="text-gray-600 dark:text-gray-400">Only admins and teachers can access this page.</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Only admins and superadmins can access this page.
+            </p>
           </div>
         </div>
       </MainLayout>
