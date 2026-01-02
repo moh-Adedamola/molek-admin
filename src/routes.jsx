@@ -11,136 +11,207 @@ import { GalleryList } from "./pages/GalleryList"
 import { GalleryForm } from "./pages/GalleryForm"
 import { Profile } from "./pages/Profile"
 import { NotFound } from "./pages/NotFound"
+// Student Management Imports
+import { StudentsList } from "./pages/StudentsList"
+import { StudentForm } from "./pages/StudentForm"
+import { StudentBulkUpload } from "./pages/StudentBulkUpload"
+import { CAScoreUpload } from "./pages/CAScoreUpload"
+import { ExamResultsImport } from "./pages/ExamResultsImport"
+import { AcademicSetup } from "./pages/AcademicSetup"
 
 export default function Routes() {
-  const { isAuthenticated } = useAuth()
+    const { isAuthenticated } = useAuth()
 
-  return (
-    <ReactRoutes>
-      {/* Public Route */}
-      <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
-      />
+    return (
+        <ReactRoutes>
+            {/* Public Route */}
+            <Route
+                path="/login"
+                element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+            />
 
-      {/* Dashboard */}
-      <Route
-        path="/"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <Dashboard />
-          </PrivateRoute>
-        }
-      />
+            {/* Dashboard */}
+            <Route
+                path="/"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <Dashboard />
+                    </PrivateRoute>
+                }
+            />
 
-      {/* Admin Management */}
-      <Route
-        path="/admins"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <AdminsList />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/admins/create"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <AdminForm />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/admins/:id/edit"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <AdminForm />
-          </PrivateRoute>
-        }
-      />
+            {/* Admin Management */}
+            <Route
+                path="/admins"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <AdminsList />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/admins/create"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <AdminForm />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/admins/:id/edit"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <AdminForm />
+                    </PrivateRoute>
+                }
+            />
 
-      {/* Content Management (Images/Videos) */}
-      <Route
-        path="/content"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <ContentList />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/content/create"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <ContentForm />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/content/:id/edit"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <ContentForm />
-          </PrivateRoute>
-        }
-      />
+            {/* Student Management */}
+            <Route
+                path="/students"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <StudentsList />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/students/create"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <StudentForm />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/students/:id/edit"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <StudentForm />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/students/bulk-upload"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <StudentBulkUpload />
+                    </PrivateRoute>
+                }
+            />
 
-      {/* News Management (uses ContentList with filter) */}
-      <Route
-        path="/news"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <ContentList defaultContentType="news" pageTitle="News Management" />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/news/create"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <ContentForm defaultContentType="news" />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/news/:id/edit"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <ContentForm />
-          </PrivateRoute>
-        }
-      />
+            {/* Academic Setup */}
+            <Route
+                path="/academic-setup"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <AcademicSetup />
+                    </PrivateRoute>
+                }
+            />
 
-      {/* Gallery Management */}
-      <Route
-        path="/galleries"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <GalleryList />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/galleries/create"
-        element={
-          <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-            <GalleryForm />
-          </PrivateRoute>
-        }
-      />
+            {/* CA Scores */}
+            <Route
+                path="/ca-scores"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <CAScoreUpload />
+                    </PrivateRoute>
+                }
+            />
 
-      {/* Profile */}
-      <Route
-        path="/profile"
-        element={
-          <PrivateRoute>
-            <Profile />
-          </PrivateRoute>
-        }
-      />
+            {/* Exam Results */}
+            <Route
+                path="/exam-results"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <ExamResultsImport />
+                    </PrivateRoute>
+                }
+            />
 
-      {/* 404 */}
-      <Route path="*" element={<NotFound />} />
-    </ReactRoutes>
-  )
+            {/* Content Management (Images/Videos) */}
+            <Route
+                path="/content"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <ContentList />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/content/create"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <ContentForm />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/content/:id/edit"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <ContentForm />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* News Management (uses ContentList with filter) */}
+            <Route
+                path="/news"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <ContentList defaultContentType="news" pageTitle="News Management" />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/news/create"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <ContentForm defaultContentType="news" />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/news/:id/edit"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <ContentForm />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* Gallery Management */}
+            <Route
+                path="/galleries"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <GalleryList />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/galleries/create"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <GalleryForm />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* Profile */}
+            <Route
+                path="/profile"
+                element={
+                    <PrivateRoute>
+                        <Profile />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* 404 */}
+            <Route path="*" element={<NotFound />} />
+        </ReactRoutes>
+    )
 }
