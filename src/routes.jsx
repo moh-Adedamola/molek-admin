@@ -12,7 +12,7 @@ import { GalleryForm } from "./pages/GalleryForm"
 import { Profile } from "./pages/Profile"
 import { NotFound } from "./pages/NotFound"
 // Student Management Imports
-import { StudentsList } from "./pages/StudentsList"
+import { StudentsList } from "./pages/Studentslist"
 import { StudentForm } from "./pages/StudentForm"
 import { StudentBulkUpload } from "./pages/StudentBulkUpload"
 import { CAScoreUpload } from "./pages/CAScoreUpload"
