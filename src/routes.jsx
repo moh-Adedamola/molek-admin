@@ -13,7 +13,7 @@ import { Profile } from "./pages/Profile"
 import { NotFound } from "./pages/NotFound"
 // Student Management Imports
 import { StudentsList } from "./pages/Studentslist"
-import { StudentForm } from "./pages/StudentForm"
+import { StudentForm } from "./pages/Studentform"
 import { StudentBulkUpload } from "./pages/StudentBulkUpload"
 import { CAScoreUpload } from "./pages/CAScoreUpload"
 import { ExamResultsImport } from "./pages/ExamResultsImport"
