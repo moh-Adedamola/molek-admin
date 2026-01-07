@@ -14,10 +14,10 @@ import { NotFound } from "./pages/NotFound"
 // Student Management Imports
 import { StudentsList } from "./pages/Studentslist"
 import { StudentForm } from "./pages/Studentform"
-import { StudentBulkUpload } from "./pages/StudentBulkUpload"
-import { CAScoreUpload } from "./pages/CAScoreUpload"
-import { ExamResultsImport } from "./pages/ExamResultsImport"
-import { AcademicSetup } from "./pages/AcademicSetup"
+import { StudentBulkUpload } from "./pages/Studentbulkupload"
+import { CAScoreUpload } from "./pages/Cascoreupload"
+import { ExamResultsImport } from "./pages/Examresultsimport"
+import { AcademicSetup } from "./pages/Academicsetup.jsx"
 
 export default function Routes() {
     const { isAuthenticated } = useAuth()
