@@ -15,6 +15,7 @@ import { NotFound } from "./pages/NotFound"
 import { StudentsList } from "./pages/Studentslist"
 import { StudentForm } from "./pages/Studentform"
 import { StudentBulkUpload } from "./pages/Studentbulkupload"
+import { StudentPromotion } from "./pages/StudentPromotion"
 import { CAScoreUpload } from "./pages/Cascoreupload"
 import { ExamResultsImport } from "./pages/Examresultsimport"
 import { AcademicSetup } from "./pages/Academicsetup.jsx"
@@ -96,6 +97,14 @@ export default function Routes() {
                 element={
                     <PrivateRoute requiredRoles={["admin", "superadmin"]}>
                         <StudentBulkUpload />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/students/promote"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <StudentPromotion />
                     </PrivateRoute>
                 }
             />

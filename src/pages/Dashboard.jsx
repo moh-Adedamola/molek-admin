@@ -24,14 +24,14 @@ export function Dashboard() {
                 adminsAPI.stats(),
                 studentsAPI.stats(),
                 contentAPI.stats(),
-                galleriesAPI.list({ page_size: 1 }),
+                galleriesAPI.stats().catch(() => ({ data: { total: 0 } })),
             ]);
 
             setStats({
                 admins: adminsRes.data.total || 0,
                 students: studentsRes.data.total || 0,
                 content: contentRes.data.total_content || 0,
-                galleries: (galleriesRes.data || []).length,
+                galleries: galleriesRes.data.total || galleriesRes.data.total_galleries || 0,
                 news: contentRes.data.total_news || 0,
             });
         } catch (error) {
@@ -137,6 +137,13 @@ export function Dashboard() {
                     >
                         <div className="text-3xl mb-2">⚙️</div>
                         <p className="font-semibold text-gray-900 dark:text-white text-center">Academic Setup</p>
+                    </a>
+                    <a
+                        href="/students/promote"
+                        className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors flex flex-col items-center"
+                    >
+                        <div className="text-3xl mb-2">📈</div>
+                        <p className="font-semibold text-gray-900 dark:text-white text-center">Student Promotion</p>
                     </a>
                 </div>
             </div>

@@ -31,6 +31,12 @@ export function Sidebar() {
             roles: ["admin", "superadmin"]
         },
         {
+            path: "/students/promote",
+            label: "Promotion",
+            icon: "📈",
+            roles: ["admin", "superadmin"]
+        },
+        {
             path: "/academic-setup",
             label: "Academic Setup",
             icon: "⚙️",

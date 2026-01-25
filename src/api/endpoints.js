@@ -161,6 +161,7 @@ export const galleriesAPI = {
         headers: { "Content-Type": "multipart/form-data" },
     }),
     delete: (id) => api.delete(`/api/galleries/${id}/`),
+    stats: () => api.get("/api/galleries/stats/"),
 };
 
 // ============================================
@@ -214,7 +215,8 @@ export const studentsAPI = {
         responseType: 'blob'
     }),
     exportForCBT: (params = {}) => api.get("/api/students/export-for-cbt/", { params }),
-    promoteStudents: (data) => api.post("/api/students/promote/", data),
+    // ✅ FIXED: Backend uses promote_class not promote
+    promoteStudents: (data) => api.post("/api/students/promote_class/", data),
 };
 
 // ============================================
@@ -303,5 +305,102 @@ export const examResultsAPI = {
     getByStudent: (studentId, params = {}) =>
         api.get(`/api/exam-results/student/${studentId}/`, { params }),
 };
+
+// ============================================
+// CA + THEORY SCORES (Legacy - use caScoresAPI instead)
+// ============================================
+
+/**
+ * Upload CA + Theory scores from CSV
+ * @param {FormData} formData - Contains file, session, term
+ * @deprecated Use caScoresAPI.bulkUpload() instead
+ */
+export const uploadCAScores = (formData) => {
+    return api.post('/api/ca-scores/bulk-upload/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
+
+/**
+ * Get CA scores with filters
+ * @deprecated Use caScoresAPI.list() instead
+ */
+export const getCAScores = (params) => {
+    return api.get('/api/ca-scores/', { params });
+};
+
+// ============================================
+// EXAM RESULTS (Legacy - use examResultsAPI instead)
+// ============================================
+
+/**
+ * Upload CBT exam results
+ * @param {FormData} formData - Contains file, session, term
+ * @deprecated Use examResultsAPI.bulkImport() instead
+ */
+export const uploadExamResults = (formData) => {
+    return api.post('/api/exam-results/bulk-import/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
+
+/**
+ * Get exam results with filters
+ * @deprecated Use examResultsAPI.list() instead
+ */
+export const getExamResults = (params) => {
+    return api.get('/api/exam-results/', { params });
+};
+
+// ============================================
+// STUDENT PROMOTION (Legacy - use studentsAPI instead)
+// ============================================
+
+/**
+ * Get promotion data for a class
+ * @param {string} classLevel - Class level (e.g., 'JSS1')
+ * @param {number} sessionId - Academic session ID
+ * @deprecated Use studentsAPI.list() with class_level filter instead
+ */
+export const getPromotionData = (classLevel, sessionId) => {
+    return api.get('/api/students/', {
+        params: {
+            class_level: classLevel,
+            session_id: sessionId,
+            is_active: true
+        }
+    });
+};
+
+/**
+ * Promote selected students
+ * @param {Object} data - { student_ids, from_class, to_class, session_id }
+ * @deprecated Use studentsAPI.promoteStudents() instead
+ */
+export const promoteStudents = (data) => {
+    return api.post('/api/students/promote_class/', data);
+};
+
+// ============================================
+// SESSIONS & TERMS (Legacy - use academicSessionsAPI/termsAPI instead)
+// ============================================
+
+/**
+ * Get all academic sessions
+ * @deprecated Use academicSessionsAPI.list() instead
+ */
+export const getSessions = () => {
+    return api.get('/api/academic-sessions/');
+};
+
+/**
+ * Get terms for a session
+ * @param {number} sessionId - Session ID
+ * @deprecated Use termsAPI.list() instead
+ */
+export const getTerms = (sessionId) => {
+    return api.get('/api/terms/', { params: { session: sessionId } });
+};
+
 
 export default api;

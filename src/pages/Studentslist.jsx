@@ -84,36 +84,46 @@ export function StudentsList() {
         }
     };
 
-    // ✅ NEW: Export for CBT with credentials
     const handleExportForCBT = async () => {
         try {
             const response = await studentsAPI.exportForCBT();
-            const credentials = response.data;
 
-            // Create CSV with credentials
-            const csvContent = [
-                ['Admission Number', 'Password', 'Full Name', 'Class Level', 'Session'].join(','),
-                ...credentials.map(student => [
-                    student.admission_number,
-                    student.password,
-                    student.full_name,
-                    student.class_level,
-                    student.session
-                ].join(','))
-            ].join('\n');
+            if (response.headers['content-type'] === 'text/csv') {
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'students_for_cbt.csv');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            } else {
+                const data = response.data;
+                const csvContent = [
+                    ['admission_number', 'first_name', 'middle_name', 'last_name', 'class_level', 'password_plain'].join(','),
+                    ...data.map(student => [
+                        student.admission_number,
+                        student.first_name,
+                        student.middle_name || '',
+                        student.last_name,
+                        student.class_level || student.class_level_name,
+                        student.password || student.password_plain
+                    ].join(','))
+                ].join('\n');
 
-            // Download as CSV
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'cbt_credentials.csv');
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'students_for_cbt.csv');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }
+
+            alert(`✅ Exported students in CBT format!\n\nFormat: admission_number, first_name, middle_name, last_name, class_level, password_plain`);
         } catch (error) {
             console.error("Failed to export CBT credentials:", error);
-            alert("Failed to export credentials. Please try again.");
+            alert("❌ Failed to export credentials. Please try again.");
         }
     };
 
@@ -123,7 +133,17 @@ export function StudentsList() {
             label: "Admission No.",
             render: (value, row) => (
                 <div className="flex items-center gap-2">
-                    <span className="text-2xl">🎓</span>
+                    {/* Show passport thumbnail if available */}
+                    {row.passport ? (
+                        <img
+                            src={row.passport}
+                            alt={row.full_name || row.first_name}
+                            className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                    ) : (
+                        <span className="text-2xl">🎓</span>
+                    )}
                     <button
                         onClick={() => navigate(`/students/${row.id}/edit`)}
                         className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
@@ -139,12 +159,12 @@ export function StudentsList() {
             render: (value, row) => value || `${row.first_name} ${row.middle_name ? row.middle_name + ' ' : ''}${row.last_name}`,
         },
         {
-            key: "class_level",
+            key: "class_level_name",
             label: "Class",
             render: (value, row) => (
                 <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full px-3 py-1 text-sm font-semibold">
-          {value?.name || row.class_name || row.class_display || 'N/A'}
-        </span>
+                    {value || row.class_level_name || 'N/A'}
+                </span>
             ),
         },
         {
@@ -155,7 +175,7 @@ export function StudentsList() {
         {
             key: "date_of_birth",
             label: "Date of Birth",
-            render: (value) => new Date(value).toLocaleDateString(),
+            render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A',
         },
         {
             key: "is_active",
@@ -166,8 +186,8 @@ export function StudentsList() {
                         ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                         : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                 }`}>
-          {value ? '✓ Active' : '✗ Inactive'}
-        </span>
+                    {value ? '✓ Active' : '✗ Inactive'}
+                </span>
             ),
         },
         {
@@ -203,9 +223,8 @@ export function StudentsList() {
                     <Button variant="secondary" onClick={handleExportCSV}>
                         📥 Export CSV
                     </Button>
-                    {/* ✅ NEW: CBT Export Button */}
-                    <Button variant="outline" onClick={handleExportForCBT}>
-                        🔑 Export for CBT
+                    <Button variant="primary" onClick={handleExportForCBT} title="Export in format: admission_number, first_name, middle_name, last_name, class_level, password_plain">
+                        🔐 Export for CBT
                     </Button>
                     <Button variant="secondary" onClick={() => navigate("/students/bulk-upload")}>
                         📤 Bulk Upload
@@ -214,6 +233,20 @@ export function StudentsList() {
                         Add Student +
                     </Button>
                 </div>
+            </div>
+
+            {/* CBT Export Info */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">📋 CBT Export Format</h3>
+                <p className="text-sm text-blue-800 dark:text-blue-400">
+                    The "Export for CBT" button exports students in this format:<br/>
+                    <code className="bg-white dark:bg-gray-800 px-2 py-1 rounded text-xs">
+                        admission_number, first_name, middle_name, last_name, class_level, password_plain
+                    </code>
+                </p>
+                <p className="text-sm text-blue-800 dark:text-blue-400 mt-2">
+                    This file can be directly uploaded to the CBT system for student import.
+                </p>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">

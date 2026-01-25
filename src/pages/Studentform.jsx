@@ -13,6 +13,9 @@ export function StudentForm() {
     const [classLevels, setClassLevels] = useState([]);
     const [academicSessions, setAcademicSessions] = useState([]);
     const [subjects, setSubjects] = useState([]);
+    const [currentPassport, setCurrentPassport] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+
     const [formData, setFormData] = useState({
         // Student Info
         first_name: "",
@@ -26,22 +29,22 @@ export function StudentForm() {
         // Address
         address: "",
         state_of_origin: "",
-        local_govt_area: "",  // Changed from lga
+        local_govt_area: "",
 
         // Academic
-        class_level: "",  // Changed from current_class
-        enrollment_session: "",  // Added
-        subjects: [],  // Added
+        class_level: "",
+        enrollment_session: "",
+        subjects: [],
 
         // Parent Info
-        parent_name: "",  // Changed from parent_guardian_name
-        parent_email: "",  // Added
-        parent_phone: "",  // Changed from parent_guardian_phone
+        parent_name: "",
+        parent_email: "",
+        parent_phone: "",
 
         // Other
-        passport: null,  // Added for file upload
+        passport: null,
         is_active: true,
-        graduation_date: "",  // Added
+        graduation_date: "",
     });
 
     useEffect(() => {
@@ -84,6 +87,34 @@ export function StudentForm() {
         try {
             const response = await studentsAPI.get(id);
             const data = response.data;
+
+            // Handle class_level - can be integer ID or nested object
+            let classLevelId = "";
+            if (typeof data.class_level === 'object' && data.class_level !== null) {
+                classLevelId = data.class_level.id || "";
+            } else if (data.class_level) {
+                classLevelId = data.class_level;
+            }
+
+            // Handle enrollment_session - can be integer ID or nested object
+            let enrollmentSessionId = "";
+            if (typeof data.enrollment_session === 'object' && data.enrollment_session !== null) {
+                enrollmentSessionId = data.enrollment_session.id || "";
+            } else if (data.enrollment_session) {
+                enrollmentSessionId = data.enrollment_session;
+            }
+
+            // Handle subjects - can be array of IDs or array of objects
+            let subjectIds = [];
+            if (Array.isArray(data.subjects)) {
+                subjectIds = data.subjects.map(s => {
+                    if (typeof s === 'object' && s !== null) {
+                        return s.id;
+                    }
+                    return s;
+                });
+            }
+
             setFormData({
                 first_name: data.first_name || "",
                 middle_name: data.middle_name || "",
@@ -95,16 +126,21 @@ export function StudentForm() {
                 address: data.address || "",
                 state_of_origin: data.state_of_origin || "",
                 local_govt_area: data.local_govt_area || "",
-                class_level: data.class_level?.id || "",
-                enrollment_session: data.enrollment_session?.id || "",
-                subjects: data.subjects?.map(s => s.id) || [],
+                class_level: classLevelId,
+                enrollment_session: enrollmentSessionId,
+                subjects: subjectIds,
                 parent_name: data.parent_name || "",
                 parent_email: data.parent_email || "",
                 parent_phone: data.parent_phone || "",
-                is_active: data.is_active,
+                is_active: data.is_active !== undefined ? data.is_active : true,
                 graduation_date: data.graduation_date || "",
                 passport: null,
             });
+
+            // Store current passport URL for display
+            if (data.passport) {
+                setCurrentPassport(data.passport);
+            }
         } catch (error) {
             console.error("Failed to fetch student:", error);
             setError("Unable to fetch student data. Please try again later.");
@@ -114,7 +150,26 @@ export function StudentForm() {
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                setError("Please select an image file");
+                return;
+            }
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setError("Image size must be less than 5MB");
+                return;
+            }
+
             setFormData({ ...formData, passport: file });
+            setError("");
+
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -153,21 +208,22 @@ export function StudentForm() {
 
             // Add all text fields
             submitData.append('first_name', formData.first_name);
-            submitData.append('middle_name', formData.middle_name);
+            submitData.append('middle_name', formData.middle_name || '');
             submitData.append('last_name', formData.last_name);
             submitData.append('date_of_birth', formData.date_of_birth);
             submitData.append('gender', formData.gender);
-            submitData.append('email', formData.email);
-            submitData.append('phone_number', formData.phone_number);
-            submitData.append('address', formData.address);
-            submitData.append('state_of_origin', formData.state_of_origin);
-            submitData.append('local_govt_area', formData.local_govt_area);
+            submitData.append('email', formData.email || '');
+            submitData.append('phone_number', formData.phone_number || '');
+            submitData.append('address', formData.address || '');
+            submitData.append('state_of_origin', formData.state_of_origin || '');
+            submitData.append('local_govt_area', formData.local_govt_area || '');
             submitData.append('class_level', formData.class_level);
             submitData.append('enrollment_session', formData.enrollment_session);
-            submitData.append('parent_name', formData.parent_name);
-            submitData.append('parent_email', formData.parent_email);
-            submitData.append('parent_phone', formData.parent_phone);
+            submitData.append('parent_name', formData.parent_name || '');
+            submitData.append('parent_email', formData.parent_email || '');
+            submitData.append('parent_phone', formData.parent_phone || '');
             submitData.append('is_active', formData.is_active);
+
             if (formData.graduation_date) {
                 submitData.append('graduation_date', formData.graduation_date);
             }
@@ -194,6 +250,7 @@ export function StudentForm() {
                 error.response?.data?.detail ||
                 error.response?.data?.admission_number?.[0] ||
                 error.response?.data?.email?.[0] ||
+                JSON.stringify(error.response?.data) ||
                 "Failed to save student. Please check the fields and try again."
             );
         } finally {
@@ -258,7 +315,7 @@ export function StudentForm() {
                     </div>
                 </div>
 
-                {/* Gender */}
+                {/* Personal Details */}
                 <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
                         👤 Personal Details
@@ -304,16 +361,45 @@ export function StudentForm() {
                             value={formData.address}
                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                         />
-                        <div>
+
+                        {/* Passport Photo Upload */}
+                        <div className="md:col-span-2">
                             <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                Profile Picture
+                                Passport Photo
                             </label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                            />
+                            <div className="flex items-start gap-4">
+                                {/* Current/Preview Image */}
+                                <div className="flex-shrink-0">
+                                    {(imagePreview || currentPassport) ? (
+                                        <img
+                                            src={imagePreview || currentPassport}
+                                            alt="Passport preview"
+                                            className="w-24 h-24 rounded-lg object-cover border-2 border-gray-200 dark:border-gray-600"
+                                        />
+                                    ) : (
+                                        <div className="w-24 h-24 rounded-lg bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
+                                            <span className="text-3xl">📷</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex-1">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    />
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        Max file size: 5MB. Accepted formats: JPG, PNG, GIF
+                                    </p>
+                                    {formData.passport && (
+                                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                                            ✓ New image selected: {formData.passport.name}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -355,7 +441,7 @@ export function StudentForm() {
                                 <option value="">Select Session</option>
                                 {academicSessions.map((session) => (
                                     <option key={session.id} value={session.id}>
-                                        {session.name}
+                                        {session.name} {session.is_current && '(Current)'}
                                     </option>
                                 ))}
                             </select>
@@ -369,24 +455,26 @@ export function StudentForm() {
                     </div>
 
                     {/* Subjects */}
-                    <div className="mt-4">
-                        <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                            Subjects
-                        </label>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl">
-                            {subjects.map((subject) => (
-                                <label key={subject.id} className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.subjects.includes(subject.id)}
-                                        onChange={() => handleSubjectChange(subject.id)}
-                                        className="w-4 h-4 rounded"
-                                    />
-                                    <span className="text-sm">{subject.name}</span>
-                                </label>
-                            ))}
+                    {subjects.length > 0 && (
+                        <div className="mt-4">
+                            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Subjects (Optional)
+                            </label>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl max-h-48 overflow-y-auto">
+                                {subjects.map((subject) => (
+                                    <label key={subject.id} className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.subjects.includes(subject.id)}
+                                            onChange={() => handleSubjectChange(subject.id)}
+                                            className="w-4 h-4 rounded"
+                                        />
+                                        <span className="text-sm">{subject.name}</span>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Parent/Guardian Information */}
@@ -414,7 +502,7 @@ export function StudentForm() {
                     </div>
                 </div>
 
-                {/* Status */}
+                {/* Status (Edit mode only) */}
                 {mode === "edit" && (
                     <div>
                         <label className="flex items-center gap-3 cursor-pointer">

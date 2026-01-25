@@ -79,8 +79,15 @@ export function ExamResultsImport() {
 
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("academic_session", selectedSession);
+        // ✅ FIXED: Django expects "session" and "term", not "academic_session"
+        formData.append("session", selectedSession);
         formData.append("term", selectedTerm);
+
+        console.log("📤 Uploading exam results:", {
+            file: file.name,
+            session: selectedSession,
+            term: selectedTerm
+        });
 
         try {
             const response = await examResultsAPI.bulkImport(formData);
@@ -88,6 +95,8 @@ export function ExamResultsImport() {
             setUploadResults(response.data);
             setFile(null);
             document.getElementById("csv-file").value = "";
+
+            console.log("✅ Upload successful:", response.data);
         } catch (err) {
             console.error("Bulk import error:", err);
             const errorMsg = err.response?.data?.error ||
@@ -103,10 +112,11 @@ export function ExamResultsImport() {
     };
 
     const downloadTemplate = () => {
-        const csvContent = "admission_number,subject_name,exam_score\n" +
-            "ADM001,Mathematics,55\n" +
-            "ADM001,English,58\n" +
-            "ADM002,Mathematics,60";
+        // ✅ FIXED: Template with correct column names
+        const csvContent = "admission_number,subject_code,subject_name,exam_score,submitted_at\n" +
+            "MOL/2026/001,GNS101,General Studies,25,2026-01-13 14:30:00\n" +
+            "MOL/2026/002,GNS101,General Studies,30,2026-01-13 14:32:00\n" +
+            "MOL/2026/001,MAT101,Mathematics,28,2026-01-13 15:00:00";
 
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -136,195 +146,153 @@ export function ExamResultsImport() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Upload Form */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                        📊 Import Results from CBT
-                    </h2>
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                        📋 CSV Format Requirements:
+                    </h3>
+                    <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        <li>• <strong>admission_number</strong> - Student admission number (e.g., MOL/2026/001)</li>
+                        <li>• <strong>subject_code</strong> - Subject code (e.g., GNS101)</li>
+                        <li>• <strong>subject_name</strong> - Full subject name (e.g., General Studies)</li>
+                        <li>• <strong>exam_score</strong> - Exam score out of 70 (e.g., 25)</li>
+                        <li>• <strong>submitted_at</strong> - Timestamp (e.g., 2026-01-13 14:30:00)</li>
+                    </ul>
+                    <button
+                        onClick={downloadTemplate}
+                        className="mt-3 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                        📥 Download Template CSV
+                    </button>
+                </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                Academic Session <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={selectedSession}
-                                onChange={(e) => setSelectedSession(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                required
-                            >
-                                <option value="">Select Session</option>
-                                {sessions.map((session) => (
-                                    <option key={session.id} value={session.id}>
-                                        {session.name} {session.is_active ? "(Active)" : ""}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Academic Session Selection */}
+                    <div>
+                        <label htmlFor="session" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Academic Session *
+                        </label>
+                        <select
+                            id="session"
+                            value={selectedSession}
+                            onChange={(e) => setSelectedSession(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                            required
+                        >
+                            <option value="">Select Academic Session</option>
+                            {sessions.map((session) => (
+                                <option key={session.id} value={session.id}>
+                                    {session.name} {session.is_current && "(Current)"}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                        <div>
-                            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                Term <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={selectedTerm}
-                                onChange={(e) => setSelectedTerm(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                required
-                            >
-                                <option value="">Select Term</option>
-                                {terms.map((term) => (
-                                    <option key={term.id} value={term.id}>
-                                        {term.name} {term.is_active ? "(Active)" : ""}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                    {/* Term Selection */}
+                    <div>
+                        <label htmlFor="term" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Term *
+                        </label>
+                        <select
+                            id="term"
+                            value={selectedTerm}
+                            onChange={(e) => setSelectedTerm(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                            required
+                        >
+                            <option value="">Select Term</option>
+                            {terms.map((term) => (
+                                <option key={term.id} value={term.id}>
+                                    {term.name} ({term.session_name}) {term.is_current && "(Current)"}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                        <div>
-                            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                Select CSV File from CBT App <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                id="csv-file"
-                                type="file"
-                                accept=".csv"
-                                onChange={handleFileChange}
-                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                            />
-                            {file && (
-                                <p className="mt-2 text-sm text-green-600 dark:text-green-400">
-                                    ✓ Selected: {file.name}
+                    {/* File Upload */}
+                    <div>
+                        <label htmlFor="csv-file" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            CSV File *
+                        </label>
+                        <input
+                            id="csv-file"
+                            type="file"
+                            accept=".csv"
+                            onChange={handleFileChange}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                            required
+                        />
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Upload a CSV file with exam results (max 10MB)
+                        </p>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex gap-3">
+                        <Button
+                            type="submit"
+                            disabled={loading || !file || !selectedSession || !selectedTerm}
+                            className="flex-1"
+                        >
+                            {loading ? "Uploading..." : "Upload Exam Results"}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => navigate(-1)}
+                        >
+                            Cancel
+                        </Button>
+                    </div>
+                </form>
+
+                {/* Upload Results */}
+                {uploadResults && (
+                    <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                            Upload Results:
+                        </h3>
+                        <div className="space-y-1 text-sm">
+                            {uploadResults.created !== undefined && (
+                                <p className="text-green-600 dark:text-green-400">
+                                    ✅ Created: {uploadResults.created} exam results
+                                </p>
+                            )}
+                            {uploadResults.updated !== undefined && (
+                                <p className="text-blue-600 dark:text-blue-400">
+                                    🔄 Updated: {uploadResults.updated} exam results
+                                </p>
+                            )}
+                            {uploadResults.subjects_created !== undefined && uploadResults.subjects_created > 0 && (
+                                <p className="text-purple-600 dark:text-purple-400">
+                                    ➕ Created: {uploadResults.subjects_created} new subjects
+                                </p>
+                            )}
+                            {uploadResults.failed !== undefined && uploadResults.failed > 0 && (
+                                <p className="text-red-600 dark:text-red-400">
+                                    ❌ Failed: {uploadResults.failed} rows
                                 </p>
                             )}
                         </div>
 
-                        <div className="flex gap-4">
-                            <Button type="submit" loading={loading} disabled={!file} className="flex-1">
-                                Import Results ✨
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={() => navigate("/students")}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                        </div>
-                    </form>
-                </div>
-
-                {/* Instructions */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                        📋 Instructions
-                    </h2>
-
-                    <div className="space-y-4 text-gray-700 dark:text-gray-300">
-                        <div>
-                            <h3 className="font-bold mb-2">CBT CSV Export Format:</h3>
-                            <ul className="list-disc list-inside space-y-1 text-sm">
-                                <li>admission_number</li>
-                                <li>subject_name</li>
-                                <li>exam_score (0-60)</li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h3 className="font-bold mb-2">Important Notes:</h3>
-                            <ul className="list-disc list-inside space-y-1 text-sm">
-                                <li>Export CSV from CBT Electron app</li>
-                                <li>First row must be header names</li>
-                                <li>Exam scores must be between 0-60</li>
-                                <li>Admission numbers must exist in system</li>
-                                <li>Subject names must match exactly</li>
-                                <li>System will automatically combine with CA scores</li>
-                                <li>Final grade = CA Score (40%) + Exam Score (60%)</li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h3 className="font-bold mb-2">Grading System:</h3>
-                            <ul className="list-disc list-inside space-y-1 text-sm">
-                                <li>A: 70-100</li>
-                                <li>B: 60-69</li>
-                                <li>C: 50-59</li>
-                                <li>D: 45-49</li>
-                                <li>E: 40-44</li>
-                                <li>F: 0-39</li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h3 className="font-bold mb-2">Example:</h3>
-                            <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded text-xs font-mono">
-                                admission_number,subject_name,exam_score<br/>
-                                ADM001,Mathematics,55<br/>
-                                ADM001,English,58<br/>
-                                ADM002,Mathematics,60
+                        {/* Show errors if any */}
+                        {uploadResults.errors && uploadResults.errors.length > 0 && (
+                            <div className="mt-3">
+                                <h4 className="font-semibold text-red-600 dark:text-red-400 mb-2">
+                                    Errors (showing first 10):
+                                </h4>
+                                <ul className="text-xs space-y-1 text-red-600 dark:text-red-400">
+                                    {uploadResults.errors.map((err, idx) => (
+                                        <li key={idx}>
+                                            Row {err.row}: {err.error || JSON.stringify(err.errors)}
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
-                        </div>
-
-                        <Button
-                            variant="outline"
-                            onClick={downloadTemplate}
-                            className="w-full"
-                        >
-                            📥 Download Template
-                        </Button>
+                        )}
                     </div>
-                </div>
+                )}
             </div>
-
-            {/* Upload Results */}
-            {uploadResults && (
-                <div className="mt-6 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                        📊 Import Results
-                    </h2>
-
-                    {uploadResults.created !== undefined && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl">
-                                <p className="text-green-600 dark:text-green-400 font-semibold">Created</p>
-                                <p className="text-3xl font-bold text-green-700 dark:text-green-300">
-                                    {uploadResults.created}
-                                </p>
-                            </div>
-                            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl">
-                                <p className="text-blue-600 dark:text-blue-400 font-semibold">Updated</p>
-                                <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">
-                                    {uploadResults.updated}
-                                </p>
-                            </div>
-                            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl">
-                                <p className="text-red-600 dark:text-red-400 font-semibold">Errors</p>
-                                <p className="text-3xl font-bold text-red-700 dark:text-red-300">
-                                    {uploadResults.errors?.length || 0}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {uploadResults.errors && uploadResults.errors.length > 0 && (
-                        <div>
-                            <h3 className="font-bold text-gray-900 dark:text-white mb-4">Errors:</h3>
-                            <div className="space-y-2 max-h-96 overflow-y-auto">
-                                {uploadResults.errors.map((error, index) => (
-                                    <div
-                                        key={index}
-                                        className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-sm text-red-700 dark:text-red-300"
-                                    >
-                                        Row {error.row}: {error.error}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
         </div>
     );
 }
