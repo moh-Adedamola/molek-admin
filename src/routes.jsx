@@ -19,6 +19,8 @@ import { StudentPromotion } from "./pages/StudentPromotion"
 import { CAScoreUpload } from "./pages/Cascoreupload"
 import { ExamResultsImport } from "./pages/Examresultsimport"
 import { AcademicSetup } from "./pages/Academicsetup.jsx"
+// Results Manager Import
+import { ExamResultsManager } from "./pages/ExamResultsManager"
 
 export default function Routes() {
     const { isAuthenticated } = useAuth()
@@ -129,12 +131,22 @@ export default function Routes() {
                 }
             />
 
-            {/* Exam Results */}
+            {/* Exam Results Import */}
             <Route
                 path="/exam-results"
                 element={
                     <PrivateRoute requiredRoles={["admin", "superadmin"]}>
                         <ExamResultsImport />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* Results Manager - CRUD for exam results */}
+            <Route
+                path="/results-manager"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <ExamResultsManager />
                     </PrivateRoute>
                 }
             />

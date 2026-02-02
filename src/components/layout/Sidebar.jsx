@@ -55,6 +55,12 @@ export function Sidebar() {
             roles: ["admin", "superadmin"]
         },
         {
+            path: "/results-manager",
+            label: "Results Manager",
+            icon: "✏️",
+            roles: ["admin", "superadmin"]
+        },
+        {
             path: "/content",
             label: "Content",
             icon: "🎥",
