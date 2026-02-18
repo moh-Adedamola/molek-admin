@@ -22,7 +22,7 @@ export function ExamResultsManager() {
     const [newResult, setNewResult] = useState({ student: '', subject: '', session: '', term: '', ca1_score: '', ca2_score: '', obj_score: '', theory_score: '' });
 
     useEffect(() => { fetchDropdownData(); }, []);
-    useEffect(() => { if (filters.session && filters.term) fetchResults(); }, [filters.session, filters.term, filters.class_level]);
+    useEffect(() => { if (filters.session && filters.term) fetchResults(); }, [filters.session, filters.term, filters.class_level, filters.subject]);
 
     const fetchDropdownData = async () => {
         try {

@@ -217,6 +217,12 @@ export const studentsAPI = {
     exportForCBT: (params = {}) => api.get("/api/students/export-for-cbt/", { params }),
     // ✅ FIXED: Backend uses promote_class not promote
     promoteStudents: (data) => api.post("/api/students/promote_class/", data),
+    
+    // Promotion analysis with configurable rules (Bug 7)
+    getPromotionAnalysis: (params) => api.get("/api/users/promotion/", { params }),
+    getPromotionRules: (params) => api.get("/api/users/promotion/rules/", { params }),
+    savePromotionRules: (data) => api.post("/api/users/promotion/rules/save/", data),
+    getPromotionSubjects: () => api.get("/api/users/promotion/subjects/"),
 };
 
 // ============================================
