@@ -84,15 +84,18 @@ export function StudentsList() {
         }
     };
 
-    const handleExportForCBT = async () => {
+    const handleExportForCBT = async (classLevel = null) => {
         try {
-            const response = await studentsAPI.exportForCBT();
+            const params = {};
+            if (classLevel) params.class_level = classLevel;
+            
+            const response = await studentsAPI.exportForCBT(params);
 
             if (response.headers['content-type'] === 'text/csv') {
                 const url = window.URL.createObjectURL(new Blob([response.data]));
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', 'students_for_cbt.csv');
+                link.setAttribute('download', classLevel ? `students_cbt_${classLevel}.csv` : 'students_for_cbt.csv');
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
@@ -114,18 +117,20 @@ export function StudentsList() {
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', 'students_for_cbt.csv');
+                link.setAttribute('download', classLevel ? `students_cbt_${classLevel}.csv` : 'students_for_cbt.csv');
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
             }
 
-            alert(`✅ Exported students in CBT format!\n\nFormat: admission_number, first_name, middle_name, last_name, class_level, password_plain`);
+            alert(`✅ Exported ${classLevel || 'ALL'} students in CBT format!\n\nFormat: admission_number, first_name, middle_name, last_name, class_level, password_plain`);
         } catch (error) {
             console.error("Failed to export CBT credentials:", error);
             alert("❌ Failed to export credentials. Please try again.");
         }
     };
+
+    const [showCBTExportMenu, setShowCBTExportMenu] = useState(false);
 
     const columns = [
         {
@@ -223,9 +228,31 @@ export function StudentsList() {
                     <Button variant="secondary" onClick={handleExportCSV}>
                         📥 Export CSV
                     </Button>
-                    <Button variant="primary" onClick={handleExportForCBT} title="Export in format: admission_number, first_name, middle_name, last_name, class_level, password_plain">
-                        🔐 Export for CBT
-                    </Button>
+                    <div className="relative">
+                        <Button variant="primary" onClick={() => setShowCBTExportMenu(!showCBTExportMenu)}>
+                            🔐 Export for CBT ▾
+                        </Button>
+                        {showCBTExportMenu && (
+                            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border-2 border-gray-200 dark:border-gray-600 z-50 overflow-hidden">
+                                <button
+                                    onClick={() => { handleExportForCBT(); setShowCBTExportMenu(false); }}
+                                    className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-900 dark:text-white font-medium border-b border-gray-100 dark:border-gray-700"
+                                >
+                                    📦 Bulk Export (All Classes)
+                                </button>
+                                <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase">By Class</div>
+                                {classLevels.map(cl => (
+                                    <button
+                                        key={cl.id}
+                                        onClick={() => { handleExportForCBT(cl.name); setShowCBTExportMenu(false); }}
+                                        className="w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 text-sm"
+                                    >
+                                        🎓 {cl.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     <Button variant="secondary" onClick={() => navigate("/students/bulk-upload")}>
                         📤 Bulk Upload
                     </Button>
