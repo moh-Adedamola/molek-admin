@@ -66,7 +66,7 @@ const handleAdminLogin = async (e) => {
         <div className="text-center mb-6 sm:mb-8">
           <img src="/logo.webp" alt="Logo" className="h-12 sm:h-16 w-auto mx-auto mb-3 sm:mb-4" />
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white font-sans mb-1 sm:mb-2">
-            MOLEK
+            MOLEK SCHOOLS
           </h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Admin Portal</p>
         </div>
