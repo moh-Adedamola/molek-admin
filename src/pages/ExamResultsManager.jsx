@@ -22,7 +22,7 @@ export function ExamResultsManager() {
     const [newResult, setNewResult] = useState({ student: '', subject: '', session: '', term: '', ca1_score: '', ca2_score: '', obj_score: '', theory_score: '' });
 
     useEffect(() => { fetchDropdownData(); }, []);
-    useEffect(() => { if (filters.session && filters.term) fetchResults(); }, [filters.session, filters.term, filters.class_level, filters.subject]);
+    useEffect(() => { if (filters.session && filters.term) fetchResults(); }, [filters.session, filters.term, filters.class_level]);
 
     const fetchDropdownData = async () => {
         try {
@@ -200,6 +200,10 @@ export function ExamResultsManager() {
                                     <th className="text-center py-3 px-3 font-semibold text-gray-700 dark:text-gray-300 text-sm">Total<br/><span className="text-xs font-normal">(100)</span></th>
                                     <th className="text-center py-3 px-3 font-semibold text-gray-700 dark:text-gray-300 text-sm">Grade</th>
                                     <th className="text-center py-3 px-3 font-semibold text-gray-700 dark:text-gray-300 text-sm">Pos</th>
+                                    <th className="text-center py-3 px-2 font-semibold text-blue-700 dark:text-blue-400 text-sm bg-blue-50 dark:bg-blue-900/20">1st<br/><span className="text-xs font-normal">B/F</span></th>
+                                    <th className="text-center py-3 px-2 font-semibold text-blue-700 dark:text-blue-400 text-sm bg-blue-50 dark:bg-blue-900/20">2nd<br/><span className="text-xs font-normal">B/F</span></th>
+                                    <th className="text-center py-3 px-2 font-semibold text-blue-700 dark:text-blue-400 text-sm bg-blue-50 dark:bg-blue-900/20">3rd<br/><span className="text-xs font-normal">B/F</span></th>
+                                    <th className="text-center py-3 px-2 font-semibold text-blue-700 dark:text-blue-400 text-sm bg-blue-50 dark:bg-blue-900/20">Cum.<br/><span className="text-xs font-normal">Avg</span></th>
                                     <th className="text-center py-3 px-3 font-semibold text-gray-700 dark:text-gray-300 text-sm">Actions</th>
                                 </tr>
                             </thead>
@@ -218,6 +222,10 @@ export function ExamResultsManager() {
                                         <td className="py-3 px-3 text-center font-bold text-blue-600">{r.total_score || 0}</td>
                                         <td className="py-3 px-3 text-center"><span className={`px-2 py-1 rounded-full text-xs font-semibold ${getGradeColor(r.grade)}`}>{r.grade || '-'}</span></td>
                                         <td className="py-3 px-3 text-center text-gray-600 dark:text-gray-400">{r.position ? `${r.position}/${r.total_students || '-'}` : '-'}</td>
+                                        <td className="py-3 px-2 text-center text-sm bg-blue-50/50 dark:bg-blue-900/10">{r.first_term_total != null ? Math.round(r.first_term_total) : '-'}</td>
+                                        <td className="py-3 px-2 text-center text-sm bg-blue-50/50 dark:bg-blue-900/10">{r.second_term_total != null ? Math.round(r.second_term_total) : '-'}</td>
+                                        <td className="py-3 px-2 text-center text-sm bg-blue-50/50 dark:bg-blue-900/10">{r.third_term_total != null ? Math.round(r.third_term_total) : '-'}</td>
+                                        <td className="py-3 px-2 text-center text-sm font-bold text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10">{r.cumulative_score != null ? parseFloat(r.cumulative_score).toFixed(1) : '-'}</td>
                                         <td className="py-3 px-3 text-center">
                                             <button onClick={() => { setEditingResult({ ...r, ca1_score: r.ca1_score || 0, ca2_score: r.ca2_score || 0, obj_score: r.obj_score || 0, theory_score: r.theory_score || 0 }); setShowEditModal(true); }}
                                                 className="text-blue-600 hover:text-blue-800 p-1" title="Edit">✏️</button>
