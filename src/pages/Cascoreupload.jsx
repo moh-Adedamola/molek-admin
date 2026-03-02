@@ -1,10 +1,10 @@
 /**
  * CA Score Upload (CA1 + CA2)
  * Nigerian School Grading: CA1 (15) + CA2 (15) = Total CA (30)
- * CSV Format: admission_number,subject,ca1_score,ca2_score
+ * CSV Format: admission_number,student_name,subject,ca1_score,ca2_score
  */
 import { useState, useEffect } from 'react';
-import { caScoresAPI, academicSessionsAPI, termsAPI } from '../api/endpoints';
+import { caScoresAPI, academicSessionsAPI, termsAPI, classLevelsAPI, studentsAPI, subjectsAPI } from '../api/endpoints';
 import { Button } from '../components/ui/Button';
 
 export function CAScoreUpload() {
@@ -14,9 +14,12 @@ export function CAScoreUpload() {
     const [result, setResult] = useState(null);
     const [sessions, setSessions] = useState([]);
     const [terms, setTerms] = useState([]);
+    const [classLevels, setClassLevels] = useState([]);
     const [formData, setFormData] = useState({ sessionId: '', termId: '' });
+    const [templateClass, setTemplateClass] = useState('');
+    const [downloadingTemplate, setDownloadingTemplate] = useState(false);
 
-    useEffect(() => { loadSessions(); }, []);
+    useEffect(() => { loadSessions(); loadClassLevels(); }, []);
     useEffect(() => { if (formData.sessionId) loadTerms(formData.sessionId); }, [formData.sessionId]);
 
     const loadSessions = async () => {
@@ -37,6 +40,13 @@ export function CAScoreUpload() {
             const current = termList.find(t => t.is_current || t.is_active);
             if (current) setFormData(prev => ({ ...prev, termId: current.id.toString() }));
         } catch (error) { console.error('Failed to load terms:', error); }
+    };
+
+    const loadClassLevels = async () => {
+        try {
+            const res = await classLevelsAPI.list();
+            setClassLevels(res.data?.results || res.data || []);
+        } catch (error) { console.error('Failed to load class levels:', error); }
     };
 
     const handleFileChange = (e) => {
@@ -71,17 +81,71 @@ export function CAScoreUpload() {
         } finally { setUploading(false); }
     };
 
-    const downloadTemplate = () => {
-        const template = `admission_number,subject,ca1_score,ca2_score
-MOL/2026/001,Mathematics,12,13
-MOL/2026/001,English Language,14,12
-MOL/2026/002,Mathematics,10,11
-# NOTE: CA1 max = 15, CA2 max = 15`;
-        const blob = new Blob([template], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = window.URL.createObjectURL(blob);
-        a.download = 'ca_scores_template.csv';
-        a.click();
+    const downloadTemplate = async () => {
+        if (!templateClass) {
+            setAlert({ type: 'error', message: 'Please select a class to download template' });
+            return;
+        }
+
+        try {
+            setDownloadingTemplate(true);
+            setAlert(null);
+
+            // Fetch students for the selected class
+            const studentsRes = await studentsAPI.list({ class_level: templateClass, is_active: true, page_size: 500 });
+            const studentsList = studentsRes.data?.results || studentsRes.data || [];
+
+            if (studentsList.length === 0) {
+                setAlert({ type: 'error', message: 'No active students found in this class' });
+                return;
+            }
+
+            // Fetch subjects for this class level
+            const subjectsRes = await subjectsAPI.list({ class_level: templateClass });
+            const subjectsList = subjectsRes.data?.results || subjectsRes.data || [];
+
+            // Sort students by name
+            studentsList.sort((a, b) => {
+                const nameA = `${a.last_name} ${a.first_name}`.toLowerCase();
+                const nameB = `${b.last_name} ${b.first_name}`.toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+
+            // Build CSV with BOM for UTF-8 support (Yoruba characters etc.)
+            let csv = '';
+            csv += 'admission_number,student_name,subject,ca1_score,ca2_score\n';
+
+            // If we have subjects, create rows for each student x subject combo
+            if (subjectsList.length > 0) {
+                for (const student of studentsList) {
+                    const name = `${student.first_name} ${student.last_name}`.trim();
+                    for (const subject of subjectsList) {
+                        csv += `${student.admission_number},${name},${subject.name},,\n`;
+                    }
+                }
+            } else {
+                // No subjects linked to class - just list students with empty subject
+                for (const student of studentsList) {
+                    const name = `${student.first_name} ${student.last_name}`.trim();
+                    csv += `${student.admission_number},${name},,,\n`;
+                }
+            }
+
+            csv += '# NOTE: student_name column is for reference only - not used during upload\n';
+            csv += '# CA1 max = 15  |  CA2 max = 15\n';
+
+            const className = classLevels.find(c => c.id === parseInt(templateClass))?.name || 'class';
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob);
+            a.download = `ca_scores_${className}.csv`;
+            a.click();
+        } catch (error) {
+            console.error('Template download error:', error);
+            setAlert({ type: 'error', message: 'Failed to generate template' });
+        } finally {
+            setDownloadingTemplate(false);
+        }
     };
 
     return (
@@ -143,12 +207,31 @@ MOL/2026/002,Mathematics,10,11
                     </div>
                 </div>
 
+                {/* Template Download with Class Filter */}
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border-2 border-green-200 dark:border-green-800 mb-6">
+                    <h3 className="font-semibold text-green-900 dark:text-green-100 mb-3">📥 Download Template (Pre-filled with Students)</h3>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <select value={templateClass} onChange={(e) => setTemplateClass(e.target.value)}
+                            className="flex-1 px-4 py-3 rounded-xl border-2 border-green-300 dark:border-green-600 dark:bg-gray-700 dark:text-white">
+                            <option value="">Select Class</option>
+                            {classLevels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                        <Button variant="outline" onClick={downloadTemplate} disabled={downloadingTemplate || !templateClass}>
+                            {downloadingTemplate ? '⏳ Generating...' : '📥 Download Template'}
+                        </Button>
+                    </div>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                        Template includes student names for easy identification. The name column is ignored during upload.
+                    </p>
+                </div>
+
                 {/* CSV Format */}
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-6">
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2">📋 CSV Format</h3>
-                    <code className="text-sm block bg-gray-100 dark:bg-gray-600 p-3 rounded font-mono">admission_number,subject,ca1_score,ca2_score</code>
+                    <code className="text-sm block bg-gray-100 dark:bg-gray-600 p-3 rounded font-mono">admission_number,student_name,subject,ca1_score,ca2_score</code>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-3 space-y-1">
                         <p>• <strong>admission_number:</strong> e.g., MOL/2026/001</p>
+                        <p>• <strong>student_name:</strong> For reference only (ignored during upload)</p>
                         <p>• <strong>subject:</strong> Must match exactly (e.g., "Mathematics")</p>
                         <p>• <strong>ca1_score:</strong> 0-15</p>
                         <p>• <strong>ca2_score:</strong> 0-15</p>
@@ -172,7 +255,6 @@ MOL/2026/002,Mathematics,10,11
                 )}
 
                 <div className="flex gap-3">
-                    <Button variant="outline" onClick={downloadTemplate}>📥 Download Template</Button>
                     <Button variant="primary" onClick={handleUpload} disabled={!file || !formData.sessionId || !formData.termId || uploading} loading={uploading}>
                         {uploading ? 'Uploading...' : '📤 Upload CA Scores'}
                     </Button>
@@ -216,9 +298,9 @@ MOL/2026/002,Mathematics,10,11
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">📖 Instructions</h2>
                 <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300">
-                    <li>Download the CSV template</li>
-                    <li>Fill in student admission numbers and CA1 + CA2 scores</li>
-                    <li>Ensure subject names match exactly</li>
+                    <li>Select the class and download the pre-filled CSV template</li>
+                    <li>Fill in CA1 and CA2 scores for each student/subject</li>
+                    <li>The student_name column is just for reference — do not remove it</li>
                     <li>CA1 and CA2 scores must be 0-15 each</li>
                     <li>Upload <strong>before</strong> importing CBT results</li>
                 </ol>

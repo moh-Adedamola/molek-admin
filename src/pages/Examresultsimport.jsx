@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { academicSessionsAPI, termsAPI } from "../api/endpoints";
+import { academicSessionsAPI, termsAPI, classLevelsAPI, studentsAPI, subjectsAPI } from "../api/endpoints";
 import { Button } from "../components/ui/Button";
 
 export function ExamResultsImport() {
@@ -17,10 +17,13 @@ export function ExamResultsImport() {
     const [uploadResults, setUploadResults] = useState(null);
     const [sessions, setSessions] = useState([]);
     const [terms, setTerms] = useState([]);
+    const [classLevels, setClassLevels] = useState([]);
     const [selectedSession, setSelectedSession] = useState("");
     const [selectedTerm, setSelectedTerm] = useState("");
+    const [templateClass, setTemplateClass] = useState('');
+    const [downloadingTemplate, setDownloadingTemplate] = useState(false);
 
-    useEffect(() => { fetchSessions(); }, []);
+    useEffect(() => { fetchSessions(); loadClassLevels(); }, []);
     useEffect(() => { if (selectedSession) fetchTerms(selectedSession); }, [selectedSession]);
 
     const fetchSessions = async () => {
@@ -41,6 +44,13 @@ export function ExamResultsImport() {
             const active = data.find(t => t.is_active || t.is_current);
             if (active) setSelectedTerm(active.id.toString());
         } catch (err) { console.error("Failed to fetch terms:", err); }
+    };
+
+    const loadClassLevels = async () => {
+        try {
+            const res = await classLevelsAPI.list();
+            setClassLevels(res.data?.results || res.data || []);
+        } catch (error) { console.error('Failed to load class levels:', error); }
     };
 
     const handleFileChange = (e) => {
@@ -84,22 +94,85 @@ export function ExamResultsImport() {
         finally { setLoading(false); }
     };
 
-    const downloadTemplate = (type) => {
-        const content = type === 'obj' 
-            ? `admission_number,subject,obj_score,total_questions
-MOL/2026/001,Mathematics,25,30
-MOL/2026/001,English Language,28,30
-# NOTE: obj_score max = 30`
-            : `admission_number,subject,theory_score
-MOL/2026/001,Mathematics,35
-MOL/2026/001,English Language,32
-# NOTE: theory_score max = 40`;
-        
-        const blob = new Blob([content], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = window.URL.createObjectURL(blob);
-        a.download = `${type}_scores_template.csv`;
-        a.click();
+    const downloadTemplate = async (type) => {
+        if (!templateClass) {
+            setError('Please select a class to download template');
+            return;
+        }
+
+        try {
+            setDownloadingTemplate(true);
+            setError('');
+
+            // Fetch students for the selected class
+            const studentsRes = await studentsAPI.list({ class_level: templateClass, is_active: true, page_size: 500 });
+            const studentsList = studentsRes.data?.results || studentsRes.data || [];
+
+            if (studentsList.length === 0) {
+                setError('No active students found in this class');
+                return;
+            }
+
+            // Fetch subjects for this class level
+            const subjectsRes = await subjectsAPI.list({ class_level: templateClass });
+            const subjectsList = subjectsRes.data?.results || subjectsRes.data || [];
+
+            // Sort students by name
+            studentsList.sort((a, b) => {
+                const nameA = `${a.last_name} ${a.first_name}`.toLowerCase();
+                const nameB = `${b.last_name} ${b.first_name}`.toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+
+            // Build CSV with BOM for UTF-8 support
+            let csv = '';
+
+            if (type === 'obj') {
+                csv += 'admission_number,student_name,subject,obj_score,total_questions\n';
+                if (subjectsList.length > 0) {
+                    for (const student of studentsList) {
+                        const name = `${student.first_name} ${student.last_name}`.trim();
+                        for (const subject of subjectsList) {
+                            csv += `${student.admission_number},${name},${subject.name},,\n`;
+                        }
+                    }
+                } else {
+                    for (const student of studentsList) {
+                        const name = `${student.first_name} ${student.last_name}`.trim();
+                        csv += `${student.admission_number},${name},,,\n`;
+                    }
+                }
+                csv += '# NOTE: student_name is for reference only | obj_score max = 30\n';
+            } else {
+                csv += 'admission_number,student_name,subject,theory_score\n';
+                if (subjectsList.length > 0) {
+                    for (const student of studentsList) {
+                        const name = `${student.first_name} ${student.last_name}`.trim();
+                        for (const subject of subjectsList) {
+                            csv += `${student.admission_number},${name},${subject.name},\n`;
+                        }
+                    }
+                } else {
+                    for (const student of studentsList) {
+                        const name = `${student.first_name} ${student.last_name}`.trim();
+                        csv += `${student.admission_number},${name},,\n`;
+                    }
+                }
+                csv += '# NOTE: student_name is for reference only | theory_score max = 40\n';
+            }
+
+            const className = classLevels.find(c => c.id === parseInt(templateClass))?.name || 'class';
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob);
+            a.download = `${type}_scores_${className}.csv`;
+            a.click();
+        } catch (error) {
+            console.error('Template download error:', error);
+            setError('Failed to generate template');
+        } finally {
+            setDownloadingTemplate(false);
+        }
     };
 
     return (
@@ -135,15 +208,34 @@ MOL/2026/001,English Language,32
                 </div>
 
                 <div className="p-6">
+                    {/* Template Download with Class Filter */}
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border-2 border-green-200 dark:border-green-800 mb-6">
+                        <h3 className="font-semibold text-green-900 dark:text-green-100 mb-3">
+                            📥 Download {activeTab === 'obj' ? 'OBJ/CBT' : 'Theory'} Template (Pre-filled with Students)
+                        </h3>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <select value={templateClass} onChange={(e) => setTemplateClass(e.target.value)}
+                                className="flex-1 px-4 py-3 rounded-xl border-2 border-green-300 dark:border-green-600 dark:bg-gray-700 dark:text-white">
+                                <option value="">Select Class</option>
+                                {classLevels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                            <button onClick={() => downloadTemplate(activeTab)} disabled={downloadingTemplate || !templateClass}
+                                className="px-4 py-3 rounded-xl border-2 border-green-400 text-green-700 font-semibold hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {downloadingTemplate ? '⏳ Generating...' : '📥 Download Template'}
+                            </button>
+                        </div>
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                            Template includes student names for easy identification. The name column is ignored during upload.
+                        </p>
+                    </div>
+
                     {/* CSV Format */}
                     <div className={`mb-6 p-4 rounded-lg border ${activeTab === 'obj' ? 'bg-blue-50 border-blue-200' : 'bg-purple-50 border-purple-200'}`}>
                         <h3 className="font-semibold mb-2">📋 CSV Format:</h3>
                         <code className="text-sm block bg-white p-2 rounded font-mono mb-2">
-                            {activeTab === 'obj' ? 'admission_number,subject,obj_score,total_questions' : 'admission_number,subject,theory_score'}
+                            {activeTab === 'obj' ? 'admission_number,student_name,subject,obj_score,total_questions' : 'admission_number,student_name,subject,theory_score'}
                         </code>
-                        <button onClick={() => downloadTemplate(activeTab)} className={`text-sm ${activeTab === 'obj' ? 'text-blue-600' : 'text-purple-600'} hover:underline`}>
-                            📥 Download Template
-                        </button>
+                        <p className="text-xs text-gray-500 mt-1">student_name column is for reference only — ignored during upload</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
