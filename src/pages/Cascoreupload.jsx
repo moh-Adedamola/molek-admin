@@ -4,7 +4,7 @@
  * CSV Format: admission_number,student_name,subject,ca1_score,ca2_score
  */
 import { useState, useEffect } from 'react';
-import { caScoresAPI, academicSessionsAPI, termsAPI, classLevelsAPI, studentsAPI, subjectsAPI } from '../api/endpoints';
+import { caScoresAPI, academicSessionsAPI, termsAPI, classLevelsAPI, studentsAPI } from '../api/endpoints';
 import { Button } from '../components/ui/Button';
 
 export function CAScoreUpload() {
@@ -100,38 +100,22 @@ export function CAScoreUpload() {
                 return;
             }
 
-            // Fetch subjects for this class level
-            const subjectsRes = await subjectsAPI.list({ class_level: templateClass });
-            const subjectsList = subjectsRes.data?.results || subjectsRes.data || [];
-
-            // Sort students by name
+            // Sort students by admission number
             studentsList.sort((a, b) => {
-                const nameA = `${a.last_name} ${a.first_name}`.toLowerCase();
-                const nameB = `${b.last_name} ${b.first_name}`.toLowerCase();
-                return nameA.localeCompare(nameB);
+                return (a.admission_number || '').localeCompare(b.admission_number || '');
             });
 
-            // Build CSV with BOM for UTF-8 support (Yoruba characters etc.)
+            // Build CSV - one row per student, teacher fills in subject and scores
             let csv = '';
             csv += 'admission_number,student_name,subject,ca1_score,ca2_score\n';
 
-            // If we have subjects, create rows for each student x subject combo
-            if (subjectsList.length > 0) {
-                for (const student of studentsList) {
-                    const name = `${student.first_name} ${student.last_name}`.trim();
-                    for (const subject of subjectsList) {
-                        csv += `${student.admission_number},${name},${subject.name},,\n`;
-                    }
-                }
-            } else {
-                // No subjects linked to class - just list students with empty subject
-                for (const student of studentsList) {
-                    const name = `${student.first_name} ${student.last_name}`.trim();
-                    csv += `${student.admission_number},${name},,,\n`;
-                }
+            for (const student of studentsList) {
+                const name = `${student.first_name} ${student.middle_name || ''} ${student.last_name}`.replace(/\s+/g, ' ').trim();
+                csv += `${student.admission_number},${name},,,\n`;
             }
 
-            csv += '# NOTE: student_name column is for reference only - not used during upload\n';
+            csv += '# NOTE: student_name is for reference only (ignored during upload)\n';
+            csv += '# Fill in subject name for each row. Duplicate rows for multiple subjects per student\n';
             csv += '# CA1 max = 15  |  CA2 max = 15\n';
 
             const className = classLevels.find(c => c.id === parseInt(templateClass))?.name || 'class';

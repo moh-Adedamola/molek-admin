@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { academicSessionsAPI, termsAPI, classLevelsAPI, studentsAPI, subjectsAPI } from "../api/endpoints";
+import { academicSessionsAPI, termsAPI, classLevelsAPI, studentsAPI } from "../api/endpoints";
 import { Button } from "../components/ui/Button";
 
 export function ExamResultsImport() {
@@ -113,52 +113,32 @@ export function ExamResultsImport() {
                 return;
             }
 
-            // Fetch subjects for this class level
-            const subjectsRes = await subjectsAPI.list({ class_level: templateClass });
-            const subjectsList = subjectsRes.data?.results || subjectsRes.data || [];
-
-            // Sort students by name
+            // Sort students by admission number
             studentsList.sort((a, b) => {
-                const nameA = `${a.last_name} ${a.first_name}`.toLowerCase();
-                const nameB = `${b.last_name} ${b.first_name}`.toLowerCase();
-                return nameA.localeCompare(nameB);
+                return (a.admission_number || '').localeCompare(b.admission_number || '');
             });
 
-            // Build CSV with BOM for UTF-8 support
+            // Build CSV - one row per student
             let csv = '';
 
             if (type === 'obj') {
                 csv += 'admission_number,student_name,subject,obj_score,total_questions\n';
-                if (subjectsList.length > 0) {
-                    for (const student of studentsList) {
-                        const name = `${student.first_name} ${student.last_name}`.trim();
-                        for (const subject of subjectsList) {
-                            csv += `${student.admission_number},${name},${subject.name},,\n`;
-                        }
-                    }
-                } else {
-                    for (const student of studentsList) {
-                        const name = `${student.first_name} ${student.last_name}`.trim();
-                        csv += `${student.admission_number},${name},,,\n`;
-                    }
+                for (const student of studentsList) {
+                    const name = `${student.first_name} ${student.middle_name || ''} ${student.last_name}`.replace(/\s+/g, ' ').trim();
+                    csv += `${student.admission_number},${name},,,\n`;
                 }
-                csv += '# NOTE: student_name is for reference only | obj_score max = 30\n';
+                csv += '# NOTE: student_name is for reference only (ignored during upload)\n';
+                csv += '# Fill in subject name for each row. Duplicate rows for multiple subjects\n';
+                csv += '# obj_score max = 30\n';
             } else {
                 csv += 'admission_number,student_name,subject,theory_score\n';
-                if (subjectsList.length > 0) {
-                    for (const student of studentsList) {
-                        const name = `${student.first_name} ${student.last_name}`.trim();
-                        for (const subject of subjectsList) {
-                            csv += `${student.admission_number},${name},${subject.name},\n`;
-                        }
-                    }
-                } else {
-                    for (const student of studentsList) {
-                        const name = `${student.first_name} ${student.last_name}`.trim();
-                        csv += `${student.admission_number},${name},,\n`;
-                    }
+                for (const student of studentsList) {
+                    const name = `${student.first_name} ${student.middle_name || ''} ${student.last_name}`.replace(/\s+/g, ' ').trim();
+                    csv += `${student.admission_number},${name},,\n`;
                 }
-                csv += '# NOTE: student_name is for reference only | theory_score max = 40\n';
+                csv += '# NOTE: student_name is for reference only (ignored during upload)\n';
+                csv += '# Fill in subject name for each row. Duplicate rows for multiple subjects\n';
+                csv += '# theory_score max = 40\n';
             }
 
             const className = classLevels.find(c => c.id === parseInt(templateClass))?.name || 'class';
