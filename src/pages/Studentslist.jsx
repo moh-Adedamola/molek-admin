@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { studentsAPI, classLevelsAPI } from "../api/endpoints";
 import { Table } from "../components/ui/Table";
@@ -12,6 +12,7 @@ export function StudentsList() {
     const [classLevels, setClassLevels] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
     const [classFilter, setClassFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("active");
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, studentId: null });
@@ -20,22 +21,35 @@ export function StudentsList() {
     const [totalCount, setTotalCount] = useState(0);
     const pageSize = 25;
 
+    // Debounce search input - wait 400ms after user stops typing
     useEffect(() => {
-        fetchStudents();
-        fetchClassLevels();
-        fetchStats();
-    }, [search, classFilter, statusFilter, currentPage]);
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [search]);
 
     // Reset to page 1 when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [search, classFilter, statusFilter]);
+    }, [debouncedSearch, classFilter, statusFilter]);
+
+    // Fetch students when page or filters change
+    useEffect(() => {
+        fetchStudents();
+    }, [debouncedSearch, classFilter, statusFilter, currentPage]);
+
+    // Fetch class levels and stats once on mount
+    useEffect(() => {
+        fetchClassLevels();
+        fetchStats();
+    }, []);
 
     const fetchStudents = async () => {
         setLoading(true);
         try {
             const params = { page: currentPage, page_size: pageSize };
-            if (search) params.search = search;
+            if (debouncedSearch) params.search = debouncedSearch;
             if (classFilter !== "all") params.class_level = classFilter;
             if (statusFilter !== "all") params.is_active = statusFilter === "active";
 
