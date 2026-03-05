@@ -232,7 +232,7 @@ export function StudentBulkUpload() {
                                 <li>First row MUST be column headers</li>
                                 <li><strong>DO NOT</strong> include admission_number (auto-generated)</li>
                                 <li>Class levels must exist in system (JSS1-JSS3, SS1-SS3)</li>
-                                <li>Date format: YYYY-MM-DD (e.g., 2010-05-15)</li>
+                                <li>Date format: DD/MM/YYYY (e.g., 15/05/2010) or YYYY-MM-DD</li>
                                 <li>Gender: M (Male) or F (Female)</li>
                                 <li>Multiple students can share same email</li>
                                 <li>File encoding: UTF-8</li>
@@ -326,14 +326,43 @@ export function StudentBulkUpload() {
                         <div>
                             <h3 className="font-bold text-gray-900 dark:text-white mb-4">Errors:</h3>
                             <div className="space-y-2 max-h-96 overflow-y-auto">
-                                {uploadResults.errors.map((error, index) => (
-                                    <div
-                                        key={index}
-                                        className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-sm text-red-700 dark:text-red-300"
-                                    >
-                                        Row {error.row}: {error.error}
-                                    </div>
-                                ))}
+                                {uploadResults.errors.map((error, index) => {
+                                    // Parse Django validation errors into human-readable messages
+                                    let readableError = error.error || '';
+                                    
+                                    // Convert "Validation failed: {'field': [ErrorDetail(...)]}" to readable text
+                                    readableError = readableError
+                                        .replace(/Validation failed:\s*/gi, '')
+                                        .replace(/\{/g, '').replace(/\}/g, '')
+                                        .replace(/\[ErrorDetail\(string='([^']+)',\s*code='[^']+'\)\]/g, '$1')
+                                        .replace(/'([^']+)':\s*/g, '$1: ')
+                                        .replace(/ErrorDetail\(string='([^']+)',\s*code='[^']+'\)/g, '$1');
+                                    
+                                    // Map field names to friendly names
+                                    readableError = readableError
+                                        .replace(/first_name/g, 'First Name')
+                                        .replace(/last_name/g, 'Last Name')
+                                        .replace(/middle_name/g, 'Middle Name')
+                                        .replace(/date_of_birth/g, 'Date of Birth')
+                                        .replace(/class_level/g, 'Class Level')
+                                        .replace(/phone_number/g, 'Phone Number')
+                                        .replace(/parent_name/g, 'Parent Name')
+                                        .replace(/parent_email/g, 'Parent Email')
+                                        .replace(/parent_phone/g, 'Parent Phone')
+                                        .replace(/state_of_origin/g, 'State of Origin')
+                                        .replace(/local_govt_area/g, 'LGA')
+                                        .replace(/admission_number/g, 'Admission Number');
+                                    
+                                    return (
+                                        <div
+                                            key={index}
+                                            className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-sm text-red-700 dark:text-red-300 flex items-start gap-2"
+                                        >
+                                            <span className="text-red-500 font-bold shrink-0">Row {error.row}:</span>
+                                            <span>{readableError}</span>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

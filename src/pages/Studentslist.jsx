@@ -16,23 +16,39 @@ export function StudentsList() {
     const [statusFilter, setStatusFilter] = useState("active");
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, studentId: null });
     const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const pageSize = 25;
 
     useEffect(() => {
         fetchStudents();
         fetchClassLevels();
         fetchStats();
+    }, [search, classFilter, statusFilter, currentPage]);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
     }, [search, classFilter, statusFilter]);
 
     const fetchStudents = async () => {
         setLoading(true);
         try {
-            const params = {};
+            const params = { page: currentPage, page_size: pageSize };
             if (search) params.search = search;
             if (classFilter !== "all") params.class_level = classFilter;
             if (statusFilter !== "all") params.is_active = statusFilter === "active";
 
             const response = await studentsAPI.list(params);
-            setStudents(response.data.results || response.data || []);
+            const data = response.data;
+            
+            if (data.results) {
+                setStudents(data.results);
+                setTotalCount(data.count || data.results.length);
+            } else {
+                setStudents(Array.isArray(data) ? data : []);
+                setTotalCount(Array.isArray(data) ? data.length : 0);
+            }
         } catch (error) {
             console.error("Failed to fetch students:", error);
         } finally {
@@ -84,18 +100,15 @@ export function StudentsList() {
         }
     };
 
-    const handleExportForCBT = async (classLevel = null) => {
+    const handleExportForCBT = async () => {
         try {
-            const params = {};
-            if (classLevel) params.class_level = classLevel;
-            
-            const response = await studentsAPI.exportForCBT(params);
+            const response = await studentsAPI.exportForCBT();
 
             if (response.headers['content-type'] === 'text/csv') {
                 const url = window.URL.createObjectURL(new Blob([response.data]));
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', classLevel ? `students_cbt_${classLevel}.csv` : 'students_for_cbt.csv');
+                link.setAttribute('download', 'students_for_cbt.csv');
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
@@ -117,20 +130,18 @@ export function StudentsList() {
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', classLevel ? `students_cbt_${classLevel}.csv` : 'students_for_cbt.csv');
+                link.setAttribute('download', 'students_for_cbt.csv');
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
             }
 
-            alert(`✅ Exported ${classLevel || 'ALL'} students in CBT format!\n\nFormat: admission_number, first_name, middle_name, last_name, class_level, password_plain`);
+            alert(`✅ Exported students in CBT format!\n\nFormat: admission_number, first_name, middle_name, last_name, class_level, password_plain`);
         } catch (error) {
             console.error("Failed to export CBT credentials:", error);
             alert("❌ Failed to export credentials. Please try again.");
         }
     };
-
-    const [showCBTExportMenu, setShowCBTExportMenu] = useState(false);
 
     const columns = [
         {
@@ -228,31 +239,9 @@ export function StudentsList() {
                     <Button variant="secondary" onClick={handleExportCSV}>
                         📥 Export CSV
                     </Button>
-                    <div className="relative">
-                        <Button variant="primary" onClick={() => setShowCBTExportMenu(!showCBTExportMenu)}>
-                            🔐 Export for CBT ▾
-                        </Button>
-                        {showCBTExportMenu && (
-                            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border-2 border-gray-200 dark:border-gray-600 z-50 overflow-hidden">
-                                <button
-                                    onClick={() => { handleExportForCBT(); setShowCBTExportMenu(false); }}
-                                    className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-900 dark:text-white font-medium border-b border-gray-100 dark:border-gray-700"
-                                >
-                                    📦 Bulk Export (All Classes)
-                                </button>
-                                <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase">By Class</div>
-                                {classLevels.map(cl => (
-                                    <button
-                                        key={cl.id}
-                                        onClick={() => { handleExportForCBT(cl.name); setShowCBTExportMenu(false); }}
-                                        className="w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 text-sm"
-                                    >
-                                        🎓 {cl.name}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    <Button variant="primary" onClick={handleExportForCBT} title="Export in format: admission_number, first_name, middle_name, last_name, class_level, password_plain">
+                        🔐 Export for CBT
+                    </Button>
                     <Button variant="secondary" onClick={() => navigate("/students/bulk-upload")}>
                         📤 Bulk Upload
                     </Button>
@@ -307,6 +296,48 @@ export function StudentsList() {
             </div>
 
             <Table columns={columns} data={students} loading={loading} />
+
+            {/* Pagination Controls */}
+            {totalCount > pageSize && (
+                <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-4 shadow">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Showing {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, totalCount)} of {totalCount} students
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setCurrentPage(1)}
+                            disabled={currentPage === 1}
+                            className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            First
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            ← Prev
+                        </button>
+                        <span className="px-4 py-2 rounded-lg text-sm font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                            Page {currentPage} of {Math.ceil(totalCount / pageSize)}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalCount / pageSize), prev + 1))}
+                            disabled={currentPage >= Math.ceil(totalCount / pageSize)}
+                            className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            Next →
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage(Math.ceil(totalCount / pageSize))}
+                            disabled={currentPage >= Math.ceil(totalCount / pageSize)}
+                            className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            Last
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <Modal
                 isOpen={deleteModal.isOpen}
