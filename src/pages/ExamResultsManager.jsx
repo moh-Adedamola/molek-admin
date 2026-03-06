@@ -26,9 +26,15 @@ export function ExamResultsManager() {
 
     const fetchDropdownData = async () => {
         try {
+            console.log('🔄 Loading dropdown data...');
             const [sessionsRes, termsRes, classesRes, subjectsRes, studentsRes] = await Promise.all([
                 academicSessionsAPI.list(), termsAPI.list(), classLevelsAPI.list(), subjectsAPI.list(), studentsAPI.list({ is_active: true })
             ]);
+            console.log('📥 Sessions:', sessionsRes.data);
+            console.log('📥 Terms:', termsRes.data);
+            console.log('📥 Classes:', classesRes.data);
+            console.log('📥 Subjects:', subjectsRes.data);
+            console.log('📥 Students:', studentsRes.data);
             setSessions(sessionsRes.data.results || sessionsRes.data || []);
             setTerms(termsRes.data.results || termsRes.data || []);
             setClassLevels(classesRes.data.results || classesRes.data || []);
@@ -36,9 +42,16 @@ export function ExamResultsManager() {
             setStudents(studentsRes.data.results || studentsRes.data || []);
             const currentSession = (sessionsRes.data.results || sessionsRes.data || []).find(s => s.is_current);
             const currentTerm = (termsRes.data.results || termsRes.data || []).find(t => t.is_current);
+            console.log('✅ Current session:', currentSession);
+            console.log('✅ Current term:', currentTerm);
             if (currentSession) setFilters(f => ({ ...f, session: currentSession.id.toString() }));
             if (currentTerm) setFilters(f => ({ ...f, term: currentTerm.id.toString() }));
-        } catch (err) { setMessage({ type: 'error', text: 'Failed to load data' }); }
+        } catch (err) {
+            console.error('❌ Dropdown load error:', err);
+            console.error('❌ Error response:', err.response?.data);
+            console.error('❌ Error status:', err.response?.status);
+            setMessage({ type: 'error', text: 'Failed to load data' });
+        }
     };
 
     const fetchResults = async () => {
@@ -50,9 +63,35 @@ export function ExamResultsManager() {
             if (filters.class_level) params.class_level = filters.class_level;
             if (filters.student) params.student = filters.student;
             if (filters.subject) params.subject = filters.subject;
+            console.log('📤 Fetching results with params:', params);
             const response = await examResultsAPI.list(params);
-            setResults(response.data.results || response.data || []);
-        } catch (err) { setMessage({ type: 'error', text: 'Failed to load results' }); }
+            console.log('📥 Raw API response:', response);
+            console.log('📥 Response data:', response.data);
+            console.log('📥 Results array:', response.data.results || response.data);
+            const data = response.data.results || response.data || [];
+            if (data.length > 0) {
+                console.log('📋 First result ALL fields:', Object.keys(data[0]));
+                console.log('📋 First result FULL object:', data[0]);
+                console.log('📋 B/F and Cumulative fields:', {
+                    first_term_total: data[0].first_term_total,
+                    second_term_total: data[0].second_term_total,
+                    third_term_total: data[0].third_term_total,
+                    cumulative_score: data[0].cumulative_score,
+                    total_score: data[0].total_score,
+                    grade: data[0].grade,
+                    position: data[0].position,
+                    total_students: data[0].total_students,
+                });
+            } else {
+                console.log('⚠️ No results returned');
+            }
+            setResults(data);
+        } catch (err) {
+            console.error('❌ Fetch error:', err);
+            console.error('❌ Error response:', err.response?.data);
+            console.error('❌ Error status:', err.response?.status);
+            setMessage({ type: 'error', text: 'Failed to load results' });
+        }
         finally { setLoading(false); }
     };
 
@@ -65,12 +104,18 @@ export function ExamResultsManager() {
         }
         setLoading(true);
         try {
-            await examResultsAPI.create({ student: parseInt(newResult.student), subject: parseInt(newResult.subject),
-                session: parseInt(newResult.session), term: parseInt(newResult.term), ca1_score: ca1, ca2_score: ca2, obj_score: obj, theory_score: theory });
+            const payload = { student: parseInt(newResult.student), subject: parseInt(newResult.subject),
+                session: parseInt(newResult.session), term: parseInt(newResult.term), ca1_score: ca1, ca2_score: ca2, obj_score: obj, theory_score: theory };
+            console.log('📤 Adding result, payload:', payload);
+            const res = await examResultsAPI.create(payload);
+            console.log('✅ Add result response:', res.data);
             setMessage({ type: 'success', text: 'Result added!' }); setShowAddModal(false);
             setNewResult({ student: '', subject: '', session: filters.session, term: filters.term, ca1_score: '', ca2_score: '', obj_score: '', theory_score: '' });
             fetchResults();
-        } catch (err) { setMessage({ type: 'error', text: err.response?.data?.detail || err.response?.data?.error || 'Failed to add' }); }
+        } catch (err) {
+            console.error('❌ Add result error:', err.response?.data || err);
+            setMessage({ type: 'error', text: err.response?.data?.detail || 'Failed to add' });
+        }
         finally { setLoading(false); }
     };
 
@@ -83,20 +128,31 @@ export function ExamResultsManager() {
         }
         setLoading(true);
         try {
-            // Use PATCH (partialUpdate) - only sends score fields, not the full object
-            await examResultsAPI.partialUpdate(editingResult.id, {
-                ca1_score: ca1, ca2_score: ca2, obj_score: obj, theory_score: theory
-            });
+            const payload = { ca1_score: ca1, ca2_score: ca2, obj_score: obj, theory_score: theory };
+            console.log('📤 Updating result ID:', editingResult.id, 'payload:', payload);
+            const res = await examResultsAPI.update(editingResult.id, payload);
+            console.log('✅ Update response:', res.data);
             setMessage({ type: 'success', text: 'Result updated!' }); setShowEditModal(false); setEditingResult(null); fetchResults();
-        } catch (err) { setMessage({ type: 'error', text: err.response?.data?.detail || err.response?.data?.error || 'Failed to update' }); }
+        } catch (err) {
+            console.error('❌ Update error:', err.response?.data || err);
+            setMessage({ type: 'error', text: 'Failed to update' });
+        }
         finally { setLoading(false); }
     };
 
     const handleDeleteResult = async (id) => {
         if (!window.confirm('Delete this result?')) return;
         setLoading(true);
-        try { await examResultsAPI.delete(id); setMessage({ type: 'success', text: 'Deleted!' }); fetchResults(); }
-        catch (err) { setMessage({ type: 'error', text: 'Failed to delete' }); }
+        try {
+            console.log('🗑️ Deleting result ID:', id);
+            await examResultsAPI.delete(id);
+            console.log('✅ Deleted successfully');
+            setMessage({ type: 'success', text: 'Deleted!' }); fetchResults();
+        }
+        catch (err) {
+            console.error('❌ Delete error:', err.response?.data || err);
+            setMessage({ type: 'error', text: 'Failed to delete' });
+        }
         finally { setLoading(false); }
     };
 
@@ -104,16 +160,20 @@ export function ExamResultsManager() {
         if (!filters.session || !filters.term) { setMessage({ type: 'error', text: 'Select session and term first' }); return; }
         setLoading(true);
         try {
-            // Use the axios api client (handles auth tokens and refresh automatically)
-            const response = await examResultsAPI.recalculatePositions({
-                session: parseInt(filters.session),
-                term: parseInt(filters.term),
-                class_level: filters.class_level ? parseInt(filters.class_level) : null
+            const payload = { session: parseInt(filters.session), term: parseInt(filters.term), class_level: filters.class_level ? parseInt(filters.class_level) : null };
+            console.log('📤 Recalculating positions, payload:', payload);
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://molek-school-backend-production.up.railway.app'}/api/exam-results/recalculate-positions/`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` },
+                body: JSON.stringify(payload)
             });
-            const data = response.data;
-            setMessage({ type: 'success', text: `Positions recalculated! ${data.subjects_processed} subjects.` });
-            fetchResults();
-        } catch (err) { setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to recalculate' }); }
+            const data = await response.json();
+            console.log('📥 Recalculate response:', data);
+            if (response.ok) { setMessage({ type: 'success', text: `Positions recalculated! ${data.subjects_processed} subjects.` }); fetchResults(); }
+            else { console.error('❌ Recalculate failed:', data); setMessage({ type: 'error', text: data.error || 'Failed' }); }
+        } catch (err) {
+            console.error('❌ Recalculate error:', err);
+            setMessage({ type: 'error', text: 'Failed to recalculate' });
+        }
         finally { setLoading(false); }
     };
 
@@ -257,7 +317,7 @@ export function ExamResultsManager() {
                                 <select value={newResult.student} onChange={(e) => setNewResult({ ...newResult, student: e.target.value })}
                                     className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" required>
                                     <option value="">Select Student</option>
-                                    {filteredStudents.map(s => <option key={s.id} value={s.id}>{s.admission_number} - {s.first_name} {s.last_name}</option>)}
+                                    {students.map(s => <option key={s.id} value={s.id}>{s.admission_number} - {s.first_name}</option>)}
                                 </select>
                                 <select value={newResult.subject} onChange={(e) => setNewResult({ ...newResult, subject: e.target.value })}
                                     className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" required>
