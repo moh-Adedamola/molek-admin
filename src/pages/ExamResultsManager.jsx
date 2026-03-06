@@ -70,7 +70,7 @@ export function ExamResultsManager() {
             setMessage({ type: 'success', text: 'Result added!' }); setShowAddModal(false);
             setNewResult({ student: '', subject: '', session: filters.session, term: filters.term, ca1_score: '', ca2_score: '', obj_score: '', theory_score: '' });
             fetchResults();
-        } catch (err) { setMessage({ type: 'error', text: err.response?.data?.detail || 'Failed to add' }); }
+        } catch (err) { setMessage({ type: 'error', text: err.response?.data?.detail || err.response?.data?.error || 'Failed to add' }); }
         finally { setLoading(false); }
     };
 
@@ -83,9 +83,12 @@ export function ExamResultsManager() {
         }
         setLoading(true);
         try {
-            await examResultsAPI.update(editingResult.id, { ca1_score: ca1, ca2_score: ca2, obj_score: obj, theory_score: theory });
+            // Use PATCH (partialUpdate) - only sends score fields, not the full object
+            await examResultsAPI.partialUpdate(editingResult.id, {
+                ca1_score: ca1, ca2_score: ca2, obj_score: obj, theory_score: theory
+            });
             setMessage({ type: 'success', text: 'Result updated!' }); setShowEditModal(false); setEditingResult(null); fetchResults();
-        } catch (err) { setMessage({ type: 'error', text: 'Failed to update' }); }
+        } catch (err) { setMessage({ type: 'error', text: err.response?.data?.detail || err.response?.data?.error || 'Failed to update' }); }
         finally { setLoading(false); }
     };
 
@@ -101,14 +104,16 @@ export function ExamResultsManager() {
         if (!filters.session || !filters.term) { setMessage({ type: 'error', text: 'Select session and term first' }); return; }
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://molek-school-backend-production.up.railway.app'}/api/exam-results/recalculate-positions/`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` },
-                body: JSON.stringify({ session: parseInt(filters.session), term: parseInt(filters.term), class_level: filters.class_level ? parseInt(filters.class_level) : null })
+            // Use the axios api client (handles auth tokens and refresh automatically)
+            const response = await examResultsAPI.recalculatePositions({
+                session: parseInt(filters.session),
+                term: parseInt(filters.term),
+                class_level: filters.class_level ? parseInt(filters.class_level) : null
             });
-            const data = await response.json();
-            if (response.ok) { setMessage({ type: 'success', text: `Positions recalculated! ${data.subjects_processed} subjects.` }); fetchResults(); }
-            else { setMessage({ type: 'error', text: data.error || 'Failed' }); }
-        } catch (err) { setMessage({ type: 'error', text: 'Failed to recalculate' }); }
+            const data = response.data;
+            setMessage({ type: 'success', text: `Positions recalculated! ${data.subjects_processed} subjects.` });
+            fetchResults();
+        } catch (err) { setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to recalculate' }); }
         finally { setLoading(false); }
     };
 
@@ -252,7 +257,7 @@ export function ExamResultsManager() {
                                 <select value={newResult.student} onChange={(e) => setNewResult({ ...newResult, student: e.target.value })}
                                     className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" required>
                                     <option value="">Select Student</option>
-                                    {students.map(s => <option key={s.id} value={s.id}>{s.admission_number} - {s.first_name}</option>)}
+                                    {filteredStudents.map(s => <option key={s.id} value={s.id}>{s.admission_number} - {s.first_name} {s.last_name}</option>)}
                                 </select>
                                 <select value={newResult.subject} onChange={(e) => setNewResult({ ...newResult, subject: e.target.value })}
                                     className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" required>

@@ -74,7 +74,7 @@ export const authAPI = {
         let accessToken, refreshToken;
         const data = response.data;
 
-        console.log("Login Response Data:", data);
+        // console.log("Login Response Data:", data);
 
         if (data.access && data.refresh) {
             // Standard SimpleJWT
@@ -304,8 +304,17 @@ export const examResultsAPI = {
     get: (id) => api.get(`/api/exam-results/${id}/`),
     create: (data) => api.post("/api/exam-results/", data),
     update: (id, data) => api.put(`/api/exam-results/${id}/`, data),
+    partialUpdate: (id, data) => api.patch(`/api/exam-results/${id}/`, data),
     delete: (id) => api.delete(`/api/exam-results/${id}/`),
     bulkImport: (formData) => api.post("/api/exam-results/bulk-import/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    }),
+    recalculatePositions: (data) => api.post("/api/exam-results/recalculate-positions/", data),
+    syncCAScores: (data) => api.post("/api/exam-results/sync-ca-scores/", data),
+    importObjScores: (formData) => api.post("/api/exam-results/import-obj-scores/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    }),
+    importTheoryScores: (formData) => api.post("/api/exam-results/import-theory-scores/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
     }),
     getByStudent: (studentId, params = {}) =>
