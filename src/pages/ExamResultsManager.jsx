@@ -8,6 +8,9 @@ import { examResultsAPI, academicSessionsAPI, termsAPI, classLevelsAPI, subjects
 
 export function ExamResultsManager() {
     const [results, setResults] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const pageSize = 25;
     const [students, setStudents] = useState([]);
     const [subjects, setSubjects] = useState([]);
     const [sessions, setSessions] = useState([]);
@@ -22,7 +25,8 @@ export function ExamResultsManager() {
     const [newResult, setNewResult] = useState({ student: '', subject: '', session: '', term: '', ca1_score: '', ca2_score: '', obj_score: '', theory_score: '' });
 
     useEffect(() => { fetchDropdownData(); }, []);
-    useEffect(() => { if (filters.session && filters.term) fetchResults(); }, [filters.session, filters.term, filters.class_level]);
+    useEffect(() => { if (filters.session && filters.term) fetchResults(); }, [filters.session, filters.term, filters.class_level, currentPage]);
+    useEffect(() => { setCurrentPage(1); }, [filters.session, filters.term, filters.class_level, filters.student, filters.subject]);
 
     const fetchDropdownData = async () => {
         try {
@@ -57,35 +61,23 @@ export function ExamResultsManager() {
     const fetchResults = async () => {
         setLoading(true);
         try {
-            const params = {};
+            const params = { page: currentPage, page_size: pageSize };
             if (filters.session) params.session = filters.session;
             if (filters.term) params.term = filters.term;
             if (filters.class_level) params.class_level = filters.class_level;
             if (filters.student) params.student = filters.student;
             if (filters.subject) params.subject = filters.subject;
-            console.log('📤 Fetching results with params:', params);
             const response = await examResultsAPI.list(params);
-            console.log('📥 Raw API response:', response);
-            console.log('📥 Response data:', response.data);
-            console.log('📥 Results array:', response.data.results || response.data);
-            const data = response.data.results || response.data || [];
-            if (data.length > 0) {
-                console.log('📋 First result ALL fields:', Object.keys(data[0]));
-                console.log('📋 First result FULL object:', data[0]);
-                console.log('📋 B/F and Cumulative fields:', {
-                    first_term_total: data[0].first_term_total,
-                    second_term_total: data[0].second_term_total,
-                    third_term_total: data[0].third_term_total,
-                    cumulative_score: data[0].cumulative_score,
-                    total_score: data[0].total_score,
-                    grade: data[0].grade,
-                    position: data[0].position,
-                    total_students: data[0].total_students,
-                });
+            const data = response.data;
+            
+            if (data.results) {
+                setResults(data.results);
+                setTotalCount(data.count || data.results.length);
             } else {
-                console.log('⚠️ No results returned');
+                const arr = Array.isArray(data) ? data : [];
+                setResults(arr);
+                setTotalCount(arr.length);
             }
-            setResults(data);
         } catch (err) {
             console.error('❌ Fetch error:', err);
             console.error('❌ Error response:', err.response?.data);
@@ -300,6 +292,48 @@ export function ExamResultsManager() {
                                 ))}
                             </tbody>
                         </table>
+
+                        {/* Pagination Controls */}
+                        {totalCount > pageSize && (
+                            <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Showing {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, totalCount)} of {totalCount} results
+                                </p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        First
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        ← Prev
+                                    </button>
+                                    <span className="px-3 py-1.5 rounded-lg text-sm font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                                        Page {currentPage} of {Math.ceil(totalCount / pageSize)}
+                                    </span>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalCount / pageSize), prev + 1))}
+                                        disabled={currentPage >= Math.ceil(totalCount / pageSize)}
+                                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        Next →
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(Math.ceil(totalCount / pageSize))}
+                                        disabled={currentPage >= Math.ceil(totalCount / pageSize)}
+                                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        Last
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

@@ -297,26 +297,48 @@ export const caScoresAPI = {
 
 // ============================================
 // 📊 EXAM RESULT API
-// ✅ FIXED: Uses /api/exam-results/
+// ✅ FIXED: URLs match actual backend routes
+// ViewSet actions:  /api/exam-results/{action}/
+// Standalone:       /api/users/exam-results/bulk-upload/
 // ============================================
 export const examResultsAPI = {
+    // CRUD (ViewSet router)
     list: (params = {}) => api.get("/api/exam-results/", { params }),
     get: (id) => api.get(`/api/exam-results/${id}/`),
     create: (data) => api.post("/api/exam-results/", data),
     update: (id, data) => api.put(`/api/exam-results/${id}/`, data),
     partialUpdate: (id, data) => api.patch(`/api/exam-results/${id}/`, data),
     delete: (id) => api.delete(`/api/exam-results/${id}/`),
-    bulkImport: (formData) => api.post("/api/exam-results/bulk-import/", formData, {
+
+    // Bulk upload combined (OBJ + Theory) - standalone view under /api/users/
+    bulkUpload: (formData, config = {}) => api.post("/api/users/exam-results/bulk-upload/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        ...config,
     }),
+
+    // Import OBJ/CBT scores (ViewSet action) - auto-pulls CA1+CA2
+    importObjScores: (formData, config = {}) => api.post("/api/exam-results/import-obj-scores/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        ...config,
+    }),
+
+    // Import Theory scores (ViewSet action)
+    importTheoryScores: (formData, config = {}) => api.post("/api/exam-results/import-theory-scores/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        ...config,
+    }),
+
+    // Recalculate positions (ViewSet action)
     recalculatePositions: (data) => api.post("/api/exam-results/recalculate-positions/", data),
+
+    // Sync CA scores from CAScore table to ExamResult table (ViewSet action)
     syncCAScores: (data) => api.post("/api/exam-results/sync-ca-scores/", data),
-    importObjScores: (formData) => api.post("/api/exam-results/import-obj-scores/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-    }),
-    importTheoryScores: (formData) => api.post("/api/exam-results/import-theory-scores/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-    }),
+
+    // Export templates (ViewSet actions)
+    exportObjTemplate: () => api.get("/api/exam-results/export-template-obj/", { responseType: 'blob' }),
+    exportTheoryTemplate: () => api.get("/api/exam-results/export-template-theory/", { responseType: 'blob' }),
+
+    // Student-specific results
     getByStudent: (studentId, params = {}) =>
         api.get(`/api/exam-results/student/${studentId}/`, { params }),
 };
@@ -351,10 +373,10 @@ export const getCAScores = (params) => {
 /**
  * Upload CBT exam results
  * @param {FormData} formData - Contains file, session, term
- * @deprecated Use examResultsAPI.bulkImport() instead
+ * @deprecated Use examResultsAPI.bulkUpload() instead
  */
 export const uploadExamResults = (formData) => {
-    return api.post('/api/exam-results/bulk-import/', formData, {
+    return api.post('/api/users/exam-results/bulk-upload/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     });
 };
