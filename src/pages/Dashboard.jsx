@@ -1,21 +1,16 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { contentAPI, galleriesAPI, adminsAPI, studentsAPI } from "../api/endpoints";
+import { GraduationCap, Users, Newspaper, Film, Upload, ClipboardList, Settings, ArrowRight } from "lucide-react";
 
 export function Dashboard() {
     const { user } = useAuth();
-    const [stats, setStats] = useState({
-        admins: 0,
-        students: 0,
-        content: 0,
-        galleries: 0,
-        news: 0,
-    });
+    const navigate = useNavigate();
+    const [stats, setStats] = useState({ admins: 0, students: 0, content: 0, galleries: 0, news: 0 });
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchStats();
-    }, []);
+    useEffect(() => { fetchStats(); }, []);
 
     const fetchStats = async () => {
         setLoading(true);
@@ -26,7 +21,6 @@ export function Dashboard() {
                 contentAPI.stats(),
                 galleriesAPI.stats().catch(() => ({ data: { total: 0 } })),
             ]);
-
             setStats({
                 admins: adminsRes.data.total || 0,
                 students: studentsRes.data.total || 0,
@@ -36,116 +30,106 @@ export function Dashboard() {
             });
         } catch (error) {
             console.error("Failed to fetch stats:", error);
-            setStats({ admins: 0, students: 0, content: 0, galleries: 0, news: 0 });
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     };
 
+    const statCards = [
+        { label: "Students", value: stats.students, icon: GraduationCap, color: "bg-blue-600", lightBg: "bg-blue-50", textColor: "text-blue-700" },
+        { label: "Admins", value: stats.admins, icon: Users, color: "bg-emerald-600", lightBg: "bg-emerald-50", textColor: "text-emerald-700" },
+        { label: "News", value: stats.news, icon: Newspaper, color: "bg-amber-600", lightBg: "bg-amber-50", textColor: "text-amber-700" },
+        { label: "Content", value: stats.content, icon: Film, color: "bg-purple-600", lightBg: "bg-purple-50", textColor: "text-purple-700" },
+    ];
+
+    const workflowSteps = [
+        { step: 1, title: "Set up academics", description: "Create sessions, terms, and class levels", path: "/academic-setup", icon: Settings, done: true },
+        { step: 2, title: "Add students", description: "Upload student list via CSV or add manually", path: "/students", icon: GraduationCap },
+        { step: 3, title: "Upload scores", description: "Upload CA, OBJ, and Theory scores in one CSV", path: "/upload-scores", icon: Upload },
+        { step: 4, title: "View results", description: "Check grades, positions, and cumulative scores", path: "/results-manager", icon: ClipboardList },
+    ];
+
     return (
-        <div className="space-y-8">
-            <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white font-poppins mb-2">
-                    Welcome back, {user?.full_name || user?.username}! 👋
+        <div className="max-w-6xl mx-auto space-y-8">
+            {/* Welcome */}
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                    Welcome back, {user?.full_name || user?.username}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">MOLEK Administration Dashboard</p>
+                <p className="text-sm text-gray-500 mt-1">Here's what's happening with your school</p>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow h-48 flex flex-col justify-center text-white">
-                    <div className="text-5xl mb-4">👥</div>
-                    <p className="text-blue-100 text-lg mb-2">Total Admins</p>
-                    <p className="text-4xl font-bold">{loading ? "..." : stats.admins}</p>
-                </div>
+            {/* Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {statCards.map((card) => {
+                    const Icon = card.icon;
+                    return (
+                        <div key={card.label} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition-shadow">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className={`${card.lightBg} p-2 rounded-lg`}>
+                                    <Icon size={18} className={card.textColor} />
+                                </div>
+                            </div>
+                            <p className="text-2xl font-bold text-gray-900">{loading ? "—" : card.value}</p>
+                            <p className="text-sm text-gray-500 mt-0.5">{card.label}</p>
+                        </div>
+                    );
+                })}
+            </div>
 
-                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow h-48 flex flex-col justify-center text-white">
-                    <div className="text-5xl mb-4">🎓</div>
-                    <p className="text-green-100 text-lg mb-2">Total Students</p>
-                    <p className="text-4xl font-bold">{loading ? "..." : stats.students}</p>
-                </div>
+            {/* Workflow Guide */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">Getting started</h2>
+                <p className="text-sm text-gray-500 mb-5">Follow these steps to manage your school's academic records</p>
 
-                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow h-48 flex flex-col justify-center text-white">
-                    <div className="text-5xl mb-4">📰</div>
-                    <p className="text-purple-100 text-lg mb-2">Total News</p>
-                    <p className="text-4xl font-bold">{loading ? "..." : stats.news}</p>
-                </div>
-
-                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow h-48 flex flex-col justify-center text-white">
-                    <div className="text-5xl mb-4">🎥</div>
-                    <p className="text-orange-100 text-lg mb-2">Total Content</p>
-                    <p className="text-4xl font-bold">{loading ? "..." : stats.content}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {workflowSteps.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                            <button
+                                key={item.step}
+                                onClick={() => navigate(item.path)}
+                                className="text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all group"
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">
+                                        {item.step}
+                                    </span>
+                                    <Icon size={16} className="text-gray-400 group-hover:text-blue-600" />
+                                </div>
+                                <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">{item.title}</p>
+                                <p className="text-xs text-gray-500 mt-1">{item.description}</p>
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Quick Actions</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <a
-                        href="/admins/create"
-                        className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex flex-col items-center"
-                    >
-                        <div className="text-3xl mb-2">➕</div>
-                        <p className="font-semibold text-gray-900 dark:text-white text-center">Add New Admin</p>
-                    </a>
-                    <a
-                        href="/students/create"
-                        className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors flex flex-col items-center"
-                    >
-                        <div className="text-3xl mb-2">🎓</div>
-                        <p className="font-semibold text-gray-900 dark:text-white text-center">Add New Student</p>
-                    </a>
-                    <a
-                        href="/ca-scores"
-                        className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors flex flex-col items-center"
-                    >
-                        <div className="text-3xl mb-2">📝</div>
-                        <p className="font-semibold text-gray-900 dark:text-white text-center">Upload CA Scores</p>
-                    </a>
-                    <a
-                        href="/exam-results"
-                        className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors flex flex-col items-center"
-                    >
-                        <div className="text-3xl mb-2">📊</div>
-                        <p className="font-semibold text-gray-900 dark:text-white text-center">Import Exam Results</p>
-                    </a>
-                    <a
-                        href="/content/create"
-                        className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors flex flex-col items-center"
-                    >
-                        <div className="text-3xl mb-2">📰</div>
-                        <p className="font-semibold text-gray-900 dark:text-white text-center">Add News Article</p>
-                    </a>
-                    <a
-                        href="/galleries/create"
-                        className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors flex flex-col items-center"
-                    >
-                        <div className="text-3xl mb-2">🖼️</div>
-                        <p className="font-semibold text-gray-900 dark:text-white text-center">Add New Gallery</p>
-                    </a>
-                    <a
-                        href="/content/create"
-                        className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors flex flex-col items-center"
-                    >
-                        <div className="text-3xl mb-2">🎥</div>
-                        <p className="font-semibold text-gray-900 dark:text-white text-center">Add Media Content</p>
-                    </a>
-                    <a
-                        href="/academic-setup"
-                        className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl hover:bg-teal-100 dark:hover:bg-teal-900/30 transition-colors flex flex-col items-center"
-                    >
-                        <div className="text-3xl mb-2">⚙️</div>
-                        <p className="font-semibold text-gray-900 dark:text-white text-center">Academic Setup</p>
-                    </a>
-                    <a
-                        href="/students/promote"
-                        className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors flex flex-col items-center"
-                    >
-                        <div className="text-3xl mb-2">📈</div>
-                        <p className="font-semibold text-gray-900 dark:text-white text-center">Student Promotion</p>
-                    </a>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                    { label: "Upload scores", desc: "Upload all scores in one CSV", path: "/upload-scores", icon: Upload },
+                    { label: "View results", desc: "Check grades and positions", path: "/results-manager", icon: ClipboardList },
+                    { label: "Add students", desc: "Bulk upload or add manually", path: "/students", icon: GraduationCap },
+                ].map((action) => {
+                    const Icon = action.icon;
+                    return (
+                        <button
+                            key={action.path}
+                            onClick={() => navigate(action.path)}
+                            className="bg-white rounded-xl border border-gray-200 p-5 text-left hover:border-blue-300 hover:shadow-sm transition-all group flex items-center justify-between"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="bg-gray-100 p-2.5 rounded-lg group-hover:bg-blue-50">
+                                    <Icon size={18} className="text-gray-600 group-hover:text-blue-600" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900">{action.label}</p>
+                                    <p className="text-xs text-gray-500">{action.desc}</p>
+                                </div>
+                            </div>
+                            <ArrowRight size={16} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
+                        </button>
+                    );
+                })}
             </div>
         </div>
     );
