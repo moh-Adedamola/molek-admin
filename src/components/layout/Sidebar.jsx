@@ -43,15 +43,9 @@ export function Sidebar() {
             roles: ["admin", "superadmin"]
         },
         {
-            path: "/ca-scores",
-            label: "CA Scores",
-            icon: "📝",
-            roles: ["admin", "superadmin"]
-        },
-        {
-            path: "/exam-results",
-            label: "Exam Results",
-            icon: "📊",
+            path: "/upload-scores",
+            label: "Upload Scores",
+            icon: "📤",
             roles: ["admin", "superadmin"]
         },
         {

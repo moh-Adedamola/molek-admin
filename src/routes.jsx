@@ -21,6 +21,8 @@ import { ExamResultsImport } from "./pages/Examresultsimport"
 import { AcademicSetup } from "./pages/Academicsetup.jsx"
 // Results Manager Import
 import { ExamResultsManager } from "./pages/ExamResultsManager"
+// Unified Score Upload
+import { UnifiedScoreUpload } from "./pages/UnifiedScoreUpload"
 
 export default function Routes() {
     const { isAuthenticated } = useAuth()
@@ -121,7 +123,17 @@ export default function Routes() {
                 }
             />
 
-            {/* CA Scores */}
+            {/* Unified Score Upload (replaces separate CA/OBJ/Theory pages) */}
+            <Route
+                path="/upload-scores"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <UnifiedScoreUpload />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* Legacy routes — kept for backward compatibility */}
             <Route
                 path="/ca-scores"
                 element={
@@ -130,8 +142,6 @@ export default function Routes() {
                     </PrivateRoute>
                 }
             />
-
-            {/* Exam Results Import */}
             <Route
                 path="/exam-results"
                 element={
