@@ -4,7 +4,7 @@ const API_BASE =
     import.meta.env.VITE_API_BASE_URL ||
     "https://molek-school-backend-production.up.railway.app";
 
-console.log("🌐 API_BASE URL:", API_BASE);
+// console.log("🌐 API_BASE URL:", API_BASE);
 
 const api = axios.create({
     baseURL: API_BASE,
@@ -173,7 +173,7 @@ export const profileAPI = {
             const response = await api.get("/api/users/profile/");
             return response.data;
         } catch (error) {
-            console.error("Failed to fetch current profile:", error);
+            // console.error("Failed to fetch current profile:", error);
             throw error;
         }
     },
@@ -211,10 +211,11 @@ export const studentsAPI = {
         ...config  // Spread any additional config (like onUploadProgress)
     }),
 
-    exportCSV: () => api.get("/api/students/export-csv/", {
+    exportCSV: (params = {}) => api.get("/api/students/export-csv/", {
+        params,
         responseType: 'blob'
     }),
-    exportForCBT: (params = {}) => api.get("/api/students/export-for-cbt/", { params }),
+    exportForCBT: (params = {}) => api.get("/api/students/export-for-cbt/", { params, responseType: 'blob' }),
     // ✅ FIXED: Backend uses promote_class not promote
     promoteStudents: (data) => api.post("/api/students/promote_class/", data),
     
