@@ -30,7 +30,7 @@ export function AdminsList() {
       const response = await adminsAPI.list(params)
       setAdmins(response.data.results || response.data || [])
     } catch (error) {
-      console.error("Failed to fetch admins:", error)
+
     } finally {
       setLoading(false)
     }
@@ -41,7 +41,7 @@ export function AdminsList() {
       const response = await adminsAPI.stats()
       setStats(response.data)
     } catch (error) {
-      console.error("Failed to fetch stats:", error)
+
     }
   }
 
@@ -52,7 +52,7 @@ export function AdminsList() {
       setDeleteModal({ isOpen: false, adminId: null })
       fetchStats()
     } catch (error) {
-      console.error("Failed to delete admin:", error)
+
     }
   }
 
@@ -62,10 +62,10 @@ export function AdminsList() {
       label: "Username",
       render: (value, row) => (
         <div className="flex items-center gap-2">
-          <span className="text-2xl">👤</span>
+          
           <button
             onClick={() => navigate(`/admins/${row.id}/edit`)}
-            className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+            className="text-blue-600 hover:underline font-semibold"
           >
             {value}
           </button>
@@ -84,10 +84,10 @@ export function AdminsList() {
       render: (value) => (
         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${
           value === 'superadmin' 
-            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
-            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+            ? 'bg-purple-100 text-purple-800'
+            : 'bg-blue-100 text-blue-800'
         }`}>
-          {value === 'superadmin' ? '⭐ SuperAdmin' : '🔑 Admin'}
+          {value === 'superadmin' ? '⭐ SuperAdmin' : ' Admin'}
         </span>
       ),
     },
@@ -116,8 +116,8 @@ export function AdminsList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Management</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Management</h1>
+          <p className="text-gray-600 mt-1">
             {stats.total_admins} admins • {stats.total_superadmins} superadmins
           </p>
         </div>
@@ -134,7 +134,7 @@ export function AdminsList() {
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+          className="px-4 py-3 rounded-xl border-2 border-gray-200"
         >
           <option value="all">All Roles</option>
           <option value="admin">Admin</option>
@@ -153,7 +153,7 @@ export function AdminsList() {
           { label: "Delete", variant: "danger", onClick: handleDelete },
         ]}
       >
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-600">
           Are you sure you want to deactivate this admin account? This action can be reversed by a superadmin.
         </p>
       </Modal>

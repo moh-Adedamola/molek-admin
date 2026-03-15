@@ -33,7 +33,7 @@ export function ContentForm({ defaultContentType = "image" }) {
         setPreview(response.data.media_url)
       }
     } catch (error) {
-      console.error("Failed to fetch content:", error)
+
     }
   }
 
@@ -110,8 +110,8 @@ export function ContentForm({ defaultContentType = "image" }) {
       }
       navigate(defaultContentType === "news" ? "/news" : "/content")
     } catch (error) {
-      console.error("Failed to save content:", error)
-      console.error("Error response:", error.response?.data)
+
+
       alert(`Failed to save: ${JSON.stringify(error.response?.data || error.message)}`)
     } finally {
       setLoading(false)
@@ -122,14 +122,14 @@ export function ContentForm({ defaultContentType = "image" }) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">
         {mode === "create" ? "Create New" : "Edit"} {isNewsType ? "News Article" : "Content"}
       </h1>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg space-y-6">
+        <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-lg space-y-6">
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 pb-4 border-b-2 border-blue-500">
               Basic Information
             </h3>
             <div className="space-y-4">
@@ -140,11 +140,11 @@ export function ContentForm({ defaultContentType = "image" }) {
                 required
               />
               <div>
-                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                <label className="block font-semibold text-gray-700 mb-2">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none"
                   rows={isNewsType ? "8" : "4"}
                   placeholder={isNewsType ? "Write your news article content here..." : "Brief description..."}
                 />
@@ -154,7 +154,7 @@ export function ContentForm({ defaultContentType = "image" }) {
 
           {defaultContentType === "image" && (
             <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 pb-4 border-b-2 border-blue-500">
                 Content Type
               </h3>
               <div className="flex gap-4">
@@ -165,7 +165,7 @@ export function ContentForm({ defaultContentType = "image" }) {
                     checked={formData.content_type === "image"}
                     onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
                   />
-                  <span>📸 Image</span>
+                  <span> Image</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -174,7 +174,7 @@ export function ContentForm({ defaultContentType = "image" }) {
                     checked={formData.content_type === "video"}
                     onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
                   />
-                  <span>🎬 Video</span>
+                  <span> Video</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -183,14 +183,14 @@ export function ContentForm({ defaultContentType = "image" }) {
                     checked={formData.content_type === "news"}
                     onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
                   />
-                  <span>📰 News</span>
+                  <span> News</span>
                 </label>
               </div>
             </div>
           )}
 
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 pb-4 border-b-2 border-blue-500">
               Publishing
             </h3>
             <div className="space-y-3">
@@ -201,7 +201,7 @@ export function ContentForm({ defaultContentType = "image" }) {
                   onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
                   className="w-5 h-5 rounded"
                 />
-                <span className="font-semibold text-gray-700 dark:text-gray-300">Publish this content</span>
+                <span className="font-semibold text-gray-700">Publish this content</span>
               </label>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
@@ -210,14 +210,14 @@ export function ContentForm({ defaultContentType = "image" }) {
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                   className="w-5 h-5 rounded"
                 />
-                <span className="font-semibold text-gray-700 dark:text-gray-300">Keep active</span>
+                <span className="font-semibold text-gray-700">Keep active</span>
               </label>
             </div>
           </div>
 
           <div className="flex gap-4 pt-6">
             <Button type="submit" loading={loading} className="flex-1">
-              {mode === "create" ? "Create" : "Update"} {isNewsType ? "News" : "Content"} ✨
+              {mode === "create" ? "Create" : "Update"} {isNewsType ? "News" : "Content"} 
             </Button>
             <Button
               type="button"
@@ -231,14 +231,14 @@ export function ContentForm({ defaultContentType = "image" }) {
         </div>
 
         {!isNewsType && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg h-fit">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              {formData.content_type === "image" ? "📸" : "🎬"} Media
+          <div className="bg-white rounded-2xl p-8 shadow-lg h-fit">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              {formData.content_type === "image" ? "" : ""} Media
             </h3>
-            <label className="block border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-2xl p-6 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-              <div className="text-5xl mb-2">{formData.content_type === "image" ? "📸" : "🎬"}</div>
-              <p className="text-gray-600 dark:text-gray-400 font-semibold">Drop {formData.content_type} here</p>
-              <p className="text-sm text-gray-500 dark:text-gray-500">or click to select</p>
+            <label className="block border-2 border-dashed border-blue-300 rounded-2xl p-6 text-center cursor-pointer hover:bg-blue-50 transition-colors">
+              <div className="text-5xl mb-2">{formData.content_type === "image" ? "" : ""}</div>
+              <p className="text-gray-600 font-semibold">Drop {formData.content_type} here</p>
+              <p className="text-sm text-gray-500">or click to select</p>
               <input
                 type="file"
                 accept={formData.content_type === "image" ? "image/*" : "video/*"}

@@ -53,7 +53,7 @@ export function AcademicSetup() {
             setClasses(classesRes.data.results || classesRes.data || []);
             setSubjects(subjectsRes.data.results || subjectsRes.data || []);
         } catch (err) {
-            console.error("Failed to fetch data:", err);
+
         }
     };
 
@@ -83,13 +83,13 @@ export function AcademicSetup() {
                 } catch (err) {
                     // Skip if already exists
                     if (!err.response?.data?.name?.includes("already exists")) {
-                        console.error(`Failed to create ${classData.name}:`, err);
+
                     }
                 }
             }
 
             await fetchAllData();
-            setSuccess(`✓ Created ${created} class levels successfully!`);
+            setSuccess(` Created ${created} class levels successfully!`);
         } catch (err) {
             setError("Failed to create class levels: " + (err.response?.data?.detail || err.message));
         } finally {
@@ -108,7 +108,7 @@ export function AcademicSetup() {
 
         try {
             await academicSessionsAPI.create(sessionForm);
-            setSuccess("✓ Academic session created successfully!");
+            setSuccess(" Academic session created successfully!");
             setSessionForm({ name: "", start_date: "", end_date: "", is_current: false });
             await fetchAllData();
         } catch (err) {
@@ -129,7 +129,7 @@ export function AcademicSetup() {
 
         try {
             await termsAPI.create(termForm);
-            setSuccess("✓ Term created successfully!");
+            setSuccess(" Term created successfully!");
             setTermForm({ session: "", name: "First Term", start_date: "", end_date: "", is_current: false });
             await fetchAllData();
         } catch (err) {
@@ -153,7 +153,7 @@ export function AcademicSetup() {
             if (type === "subject") await subjectsAPI.delete(id);
 
             await fetchAllData();
-            setSuccess("✓ Deleted successfully!");
+            setSuccess(" Deleted successfully!");
         } catch (err) {
             setError("Failed to delete: " + (err.response?.data?.detail || err.message));
         } finally {
@@ -168,7 +168,7 @@ export function AcademicSetup() {
             if (type === "term") await termsAPI.setActive(id);
 
             await fetchAllData();
-            setSuccess("✓ Set as active successfully!");
+            setSuccess(" Set as active successfully!");
         } catch (err) {
             setError("Failed to set active: " + (err.response?.data?.detail || err.message));
         } finally {
@@ -180,8 +180,8 @@ export function AcademicSetup() {
         <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Academic Setup</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    <h1 className="text-3xl font-bold text-gray-900">Academic Setup</h1>
+                    <p className="text-gray-600 mt-1">
                         Configure your school's academic structure
                     </p>
                 </div>
@@ -189,12 +189,12 @@ export function AcademicSetup() {
 
             {/* Alerts */}
             {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl">
+                <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl">
                     {error}
                 </div>
             )}
             {success && (
-                <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-xl">
+                <div className="bg-green-50 border-2 border-green-200 text-green-700 px-4 py-3 rounded-xl">
                     {success}
                 </div>
             )}
@@ -202,13 +202,13 @@ export function AcademicSetup() {
             {/* ========================================== */}
             {/* STEP 1: CLASS LEVELS */}
             {/* ========================================== */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        <h2 className="text-2xl font-bold text-gray-900">
                             Step 1: Class Levels
                         </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">
+                        <p className="text-gray-600 mt-1">
                             {classes.length === 0 ?
                                 "Create all 6 class levels with one click" :
                                 `${classes.length} class levels configured`
@@ -221,7 +221,7 @@ export function AcademicSetup() {
                             loading={loading}
                             size="lg"
                         >
-                            ✨ Create All Class Levels
+                             Create All Class Levels
                         </Button>
                     )}
                 </div>
@@ -231,12 +231,12 @@ export function AcademicSetup() {
                         {classes.map((cls) => (
                             <div
                                 key={cls.id}
-                                className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4 text-center"
+                                className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 text-center"
                             >
-                                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                                <div className="text-2xl font-bold text-blue-700">
                                     {cls.name}
                                 </div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                <div className="text-sm text-gray-600 mt-1">
                                     Order: {cls.order}
                                 </div>
                             </div>
@@ -248,8 +248,8 @@ export function AcademicSetup() {
             {/* ========================================== */}
             {/* STEP 2: ACADEMIC SESSIONS */}
             {/* ========================================== */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
                     Step 2: Academic Sessions
                 </h2>
 
@@ -291,7 +291,7 @@ export function AcademicSetup() {
                                 onChange={(e) => setSessionForm({...sessionForm, is_current: e.target.checked})}
                                 className="w-4 h-4"
                             />
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                            <span className="text-sm text-gray-700">
                                 Set as current session
                             </span>
                         </label>
@@ -306,12 +306,12 @@ export function AcademicSetup() {
                                 key={session.id}
                                 className={`flex items-center justify-between p-4 rounded-xl border-2 ${
                                     session.is_current
-                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                                        : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                                        ? 'bg-green-50 border-green-200'
+                                        : 'bg-gray-50 border-gray-200'
                                 }`}
                             >
                                 <div>
-                                    <div className="font-bold text-gray-900 dark:text-white">
+                                    <div className="font-bold text-gray-900">
                                         {session.name}
                                         {session.is_current && (
                                             <span className="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded">
@@ -319,7 +319,7 @@ export function AcademicSetup() {
                                             </span>
                                         )}
                                     </div>
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    <div className="text-sm text-gray-600">
                                         {session.start_date} to {session.end_date}
                                     </div>
                                 </div>
@@ -350,13 +350,13 @@ export function AcademicSetup() {
             {/* ========================================== */}
             {/* STEP 3: TERMS (OPTIONAL) */}
             {/* ========================================== */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
                     Step 3: Terms <span className="text-sm text-gray-500">(Optional)</span>
                 </h2>
 
                 {sessions.length === 0 ? (
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-gray-600">
                         Please create an academic session first
                     </p>
                 ) : (
@@ -365,13 +365,13 @@ export function AcademicSetup() {
                         <form onSubmit={handleCreateTerm} className="mb-6">
                             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 <div>
-                                    <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    <label className="block font-semibold text-gray-700 mb-2">
                                         Session
                                     </label>
                                     <select
                                         value={termForm.session}
                                         onChange={(e) => setTermForm({...termForm, session: e.target.value})}
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200"
                                         required
                                     >
                                         <option value="">Select Session</option>
@@ -381,13 +381,13 @@ export function AcademicSetup() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    <label className="block font-semibold text-gray-700 mb-2">
                                         Term
                                     </label>
                                     <select
                                         value={termForm.name}
                                         onChange={(e) => setTermForm({...termForm, name: e.target.value})}
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200"
                                     >
                                         <option value="First Term">First Term</option>
                                         <option value="Second Term">Second Term</option>
@@ -422,7 +422,7 @@ export function AcademicSetup() {
                                         onChange={(e) => setTermForm({...termForm, is_current: e.target.checked})}
                                         className="w-4 h-4"
                                     />
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    <span className="text-sm text-gray-700">
                                         Set as current term
                                     </span>
                                 </label>
@@ -437,12 +437,12 @@ export function AcademicSetup() {
                                         key={term.id}
                                         className={`flex items-center justify-between p-4 rounded-xl border-2 ${
                                             term.is_current
-                                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                                                : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                                                ? 'bg-green-50 border-green-200'
+                                                : 'bg-gray-50 border-gray-200'
                                         }`}
                                     >
                                         <div>
-                                            <div className="font-bold text-gray-900 dark:text-white">
+                                            <div className="font-bold text-gray-900">
                                                 {term.name} - {term.session_name}
                                                 {term.is_current && (
                                                     <span className="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded">
@@ -450,7 +450,7 @@ export function AcademicSetup() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                            <div className="text-sm text-gray-600">
                                                 {term.start_date} to {term.end_date}
                                             </div>
                                         </div>
@@ -483,33 +483,33 @@ export function AcademicSetup() {
             {/* ========================================== */}
             {/* STEP 4: SUBJECTS (AUTO-CREATED) */}
             {/* ========================================== */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
                     Step 4: Subjects <span className="text-sm text-gray-500">(Auto-Created)</span>
                 </h2>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4">
-                    <p className="text-blue-800 dark:text-blue-300">
-                        <strong>✨ Subjects are automatically created</strong> when you upload CA scores or exam results.
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
+                    <p className="text-blue-800">
+                        <strong> Subjects are automatically created</strong> when you upload CA scores or exam results.
                         No need to create them manually!
                     </p>
                 </div>
 
                 {subjects.length > 0 && (
                     <div>
-                        <h3 className="font-bold text-gray-900 dark:text-white mb-3">
+                        <h3 className="font-bold text-gray-900 mb-3">
                             Auto-Created Subjects ({subjects.length})
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                             {subjects.map((subject) => (
                                 <div
                                     key={subject.id}
-                                    className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-3"
+                                    className="bg-purple-50 border-2 border-purple-200 rounded-xl p-3"
                                 >
-                                    <div className="font-bold text-purple-700 dark:text-purple-300">
+                                    <div className="font-bold text-purple-700">
                                         {subject.name}
                                     </div>
-                                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                    <div className="text-xs text-gray-600 mt-1">
                                         Code: {subject.code}
                                     </div>
                                 </div>
@@ -545,7 +545,7 @@ export function AcademicSetup() {
 
                 {classes.length >= 6 && sessions.length >= 1 && (
                     <div className="mt-4 bg-white/20 backdrop-blur rounded-xl p-4 text-center">
-                        <div className="text-lg font-bold">✅ Setup Complete!</div>
+                        <div className="text-lg font-bold"> Setup Complete!</div>
                         <div className="text-sm opacity-90 mt-1">
                             You can now register students and upload scores
                         </div>

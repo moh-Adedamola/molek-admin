@@ -122,8 +122,7 @@ export function GalleryForm() {
 
     try {
       const response = await galleriesAPI.create(formData);
-      console.log('Gallery created successfully:', response.data);
-      
+
       clearInterval(uploadInterval);
       completeUpload();
       
@@ -132,7 +131,7 @@ export function GalleryForm() {
         navigate("/galleries");
       }, 1000);
     } catch (err) {
-      console.error("Failed to create gallery:", err);
+
       clearInterval(uploadInterval);
       failUpload();
       
@@ -148,17 +147,17 @@ export function GalleryForm() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-        Create New Gallery ✨
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">
+        Create New Gallery 
       </h1>
 
       {mediaError && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg animate-pulse">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg animate-pulse">
           {mediaError}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-lg space-y-6">
         <div>
           <Input
             label="Gallery Title (Optional)"
@@ -169,8 +168,8 @@ export function GalleryForm() {
         </div>
 
         <div>
-          <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Upload Media Files * (Images or Videos) 📸🎥
+          <label className="block font-semibold text-gray-700 mb-2">
+            Upload Media Files * (Images or Videos) 
           </label>
           <input
             ref={fileInputRef}
@@ -178,7 +177,7 @@ export function GalleryForm() {
             multiple
             accept="image/*,video/*"
             onChange={handleFileChange}
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
           <p className="mt-2 text-sm text-gray-500">
             Select multiple files (up to 20 total). Supports images (JPG/PNG/WEBP) and videos (MP4/MOV).
@@ -186,15 +185,15 @@ export function GalleryForm() {
 
           {media.length > 0 && (
             <div className="mt-4 space-y-2">
-              <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+              <p className="text-sm text-green-600 font-medium">
                 {media.length}/20 file{media.length !== 1 ? "s" : ""} selected:
               </p>
-              <div className="max-h-40 overflow-y-auto space-y-1 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="max-h-40 overflow-y-auto space-y-1 p-2 bg-gray-50 rounded-lg">
                 {media.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-white dark:bg-gray-600 rounded-md shadow-sm">
+                  <div key={index} className="flex items-center justify-between p-2 bg-white rounded-md shadow-sm">
                     <div className="flex items-center gap-2 truncate flex-1">
                       <span className="text-xs">
-                        {file.type.startsWith('image/') ? '🖼️' : '🎥'}
+                        {file.type.startsWith('image/') ? '' : ''}
                       </span>
                       <span className="text-sm truncate">{file.name}</span>
                       <span className="text-xs text-gray-500">({(file.size / 1024 / 1024).toFixed(1)}MB)</span>
@@ -206,7 +205,7 @@ export function GalleryForm() {
                       onClick={() => removeFile(index)}
                       className="text-red-500 hover:text-red-700 ml-2"
                     >
-                      ✕
+                      
                     </Button>
                   </div>
                 ))}
@@ -218,7 +217,7 @@ export function GalleryForm() {
                   onClick={() => fileInputRef.current?.click()}
                   className="mt-2 w-full border-dashed border-2"
                 >
-                  Add More Files 📁
+                  Add More Files 
                 </Button>
               )}
             </div>
@@ -228,11 +227,11 @@ export function GalleryForm() {
         {/* Progress Bar */}
         {uploadStatus === 'uploading' && (
           <div className="space-y-2">
-            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex justify-between text-sm text-gray-600">
               <span>Uploading... {progress.toFixed(0)}%</span>
-              <span>✨</span>
+              <span></span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
               <div
                 className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-300 ease-out shadow-lg"
                 style={{ width: `${progress}%` }}
@@ -242,8 +241,8 @@ export function GalleryForm() {
         )}
 
         {uploadStatus === 'complete' && (
-          <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-lg text-center font-semibold">
-            🎉 Gallery created successfully! Redirecting...
+          <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-center font-semibold">
+             Gallery created successfully! Redirecting...
           </div>
         )}
 
@@ -254,7 +253,7 @@ export function GalleryForm() {
             disabled={uploadStatus === 'uploading' || media.length === 0}
             className="flex-1"
           >
-            {uploadStatus === 'complete' ? 'All Done! 🎊' : 'Create Gallery 📸🎥'}
+            {uploadStatus === 'complete' ? 'All Done! ' : 'Create Gallery '}
           </Button>
           <Button
             type="button"

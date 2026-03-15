@@ -29,7 +29,7 @@ export function Profile() {
       await profileAPI.update(formData)
       alert("Profile updated successfully!")
     } catch (error) {
-      console.error("Failed to update profile:", error)
+
       alert("Failed to update profile")
     } finally {
       setLoading(false)
@@ -52,7 +52,7 @@ export function Profile() {
       setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" })
       setShowPasswordModal(false)
     } catch (error) {
-      console.error("Failed to change password:", error)
+
       alert("Failed to change password")
     } finally {
       setLoading(false)
@@ -61,11 +61,11 @@ export function Profile() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Profile</h1>
+      <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Profile Information</h2>
+        <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-lg">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Profile Information</h2>
 
           <form onSubmit={handleUpdateProfile} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -75,8 +75,8 @@ export function Profile() {
               <Input label="Last Name" value={user?.last_name || ""} disabled />
             </div>
 
-            <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-6 mt-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Editable Information</h3>
+            <div className="border-t-2 border-gray-200 pt-6 mt-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Editable Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   label="Phone Number"
@@ -103,30 +103,30 @@ export function Profile() {
 
             <div className="flex gap-4 pt-6">
               <Button type="submit" loading={loading} className="flex-1">
-                Save Changes ❤️
+                Save Changes 
               </Button>
               <Button type="button" variant="secondary" onClick={() => setShowPasswordModal(true)} className="flex-1">
-                Change Password 🔐
+                Change Password 
               </Button>
             </div>
           </form>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg h-fit">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Account Summary</h2>
+        <div className="bg-white rounded-2xl p-8 shadow-lg h-fit">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Account Summary</h2>
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <div className="text-6xl mb-2">👤</div>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{user?.full_name}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{user?.role}</p>
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2"><span className="text-2xl font-bold text-blue-700">{(user?.full_name || "A").charAt(0).toUpperCase()}</span></div>
+              <p className="text-xl font-bold text-gray-900">{user?.full_name}</p>
+              <p className="text-sm text-gray-600">{user?.role}</p>
             </div>
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">User ID</p>
-              <p className="font-mono text-gray-900 dark:text-white">{user?.id}</p>
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">User ID</p>
+              <p className="font-mono text-gray-900">{user?.id}</p>
             </div>
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Role</p>
-              <p className="font-semibold text-gray-900 dark:text-white capitalize">{user?.role}</p>
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Role</p>
+              <p className="font-semibold text-gray-900 capitalize">{user?.role}</p>
             </div>
           </div>
         </div>

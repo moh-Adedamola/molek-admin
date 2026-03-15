@@ -61,7 +61,7 @@ export function StudentForm() {
             const response = await classLevelsAPI.list();
             setClassLevels(response.data.results || response.data || []);
         } catch (error) {
-            console.error("Failed to fetch class levels:", error);
+
         }
     };
 
@@ -70,7 +70,7 @@ export function StudentForm() {
             const response = await academicSessionsAPI.list();
             setAcademicSessions(response.data.results || response.data || []);
         } catch (error) {
-            console.error("Failed to fetch academic sessions:", error);
+
         }
     };
 
@@ -79,7 +79,7 @@ export function StudentForm() {
             const response = await subjectsAPI.list();
             setSubjects(response.data.results || response.data || []);
         } catch (error) {
-            console.error("Failed to fetch subjects:", error);
+
         }
     };
 
@@ -142,7 +142,7 @@ export function StudentForm() {
                 setCurrentPassport(data.passport);
             }
         } catch (error) {
-            console.error("Failed to fetch student:", error);
+
             setError("Unable to fetch student data. Please try again later.");
         }
     };
@@ -245,7 +245,7 @@ export function StudentForm() {
             }
             navigate("/students");
         } catch (error) {
-            console.error("Failed to save student:", error);
+
             setError(
                 error.response?.data?.detail ||
                 error.response?.data?.admission_number?.[0] ||
@@ -260,21 +260,21 @@ export function StudentForm() {
 
     return (
         <div className="max-w-5xl mx-auto">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">
                 {mode === "create" ? "Add New Student" : "Edit Student"}
             </h1>
 
             {error && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
                     {error}
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg space-y-6">
+            <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-lg space-y-6">
                 {/* Student Information */}
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
-                        📚 Student Information
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 pb-4 border-b-2 border-blue-500">
+                         Student Information
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
@@ -317,12 +317,12 @@ export function StudentForm() {
 
                 {/* Personal Details */}
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
-                        👤 Personal Details
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 pb-4 border-b-2 border-blue-500">
+                         Personal Details
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block font-semibold text-gray-700 mb-2">
                                 Gender <span className="text-red-500">*</span>
                             </label>
                             <div className="flex gap-4">
@@ -333,7 +333,7 @@ export function StudentForm() {
                                         checked={formData.gender === "M"}
                                         onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                                     />
-                                    <span>Male 👨</span>
+                                    <span>Male </span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
@@ -342,7 +342,7 @@ export function StudentForm() {
                                         checked={formData.gender === "F"}
                                         onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                                     />
-                                    <span>Female 👩</span>
+                                    <span>Female </span>
                                 </label>
                             </div>
                         </div>
@@ -364,7 +364,7 @@ export function StudentForm() {
 
                         {/* Passport Photo Upload */}
                         <div className="md:col-span-2">
-                            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block font-semibold text-gray-700 mb-2">
                                 Passport Photo
                             </label>
                             <div className="flex items-start gap-4">
@@ -374,11 +374,11 @@ export function StudentForm() {
                                         <img
                                             src={imagePreview || currentPassport}
                                             alt="Passport preview"
-                                            className="w-24 h-24 rounded-lg object-cover border-2 border-gray-200 dark:border-gray-600"
+                                            className="w-24 h-24 rounded-lg object-cover border-2 border-gray-200"
                                         />
                                     ) : (
-                                        <div className="w-24 h-24 rounded-lg bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                                            <span className="text-3xl">📷</span>
+                                        <div className="w-24 h-24 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+                                            
                                         </div>
                                     )}
                                 </div>
@@ -388,14 +388,14 @@ export function StudentForm() {
                                         type="file"
                                         accept="image/*"
                                         onChange={handleFileChange}
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                     />
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    <p className="text-sm text-gray-500 mt-1">
                                         Max file size: 5MB. Accepted formats: JPG, PNG, GIF
                                     </p>
                                     {formData.passport && (
-                                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                                            ✓ New image selected: {formData.passport.name}
+                                        <p className="text-sm text-green-600 mt-1">
+                                             New image selected: {formData.passport.name}
                                         </p>
                                     )}
                                 </div>
@@ -406,18 +406,18 @@ export function StudentForm() {
 
                 {/* Academic Information */}
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
-                        🎓 Academic Information
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 pb-4 border-b-2 border-blue-500">
+                         Academic Information
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block font-semibold text-gray-700 mb-2">
                                 Class Level <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={formData.class_level}
                                 onChange={(e) => setFormData({ ...formData, class_level: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200"
                                 required
                             >
                                 <option value="">Select Class</option>
@@ -429,13 +429,13 @@ export function StudentForm() {
                             </select>
                         </div>
                         <div>
-                            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block font-semibold text-gray-700 mb-2">
                                 Enrollment Session <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={formData.enrollment_session}
                                 onChange={(e) => setFormData({ ...formData, enrollment_session: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200"
                                 required
                             >
                                 <option value="">Select Session</option>
@@ -457,10 +457,10 @@ export function StudentForm() {
                     {/* Subjects */}
                     {subjects.length > 0 && (
                         <div className="mt-4">
-                            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block font-semibold text-gray-700 mb-2">
                                 Subjects (Optional)
                             </label>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl max-h-48 overflow-y-auto">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-4 border-2 border-gray-200 rounded-xl max-h-48 overflow-y-auto">
                                 {subjects.map((subject) => (
                                     <label key={subject.id} className="flex items-center gap-2 cursor-pointer">
                                         <input
@@ -479,8 +479,8 @@ export function StudentForm() {
 
                 {/* Parent/Guardian Information */}
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
-                        👨‍👩‍👧 Parent/Guardian Information
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 pb-4 border-b-2 border-blue-500">
+                        ‍‍ Parent/Guardian Information
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
@@ -512,14 +512,14 @@ export function StudentForm() {
                                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                                 className="w-5 h-5 rounded"
                             />
-                            <span className="font-semibold text-gray-700 dark:text-gray-300">Active Student</span>
+                            <span className="font-semibold text-gray-700">Active Student</span>
                         </label>
                     </div>
                 )}
 
                 <div className="flex gap-4 pt-6">
                     <Button type="submit" loading={loading} className="flex-1">
-                        {mode === "create" ? "Create Student ✨" : "Update Student ✨"}
+                        {mode === "create" ? "Create Student " : "Update Student "}
                     </Button>
                     <Button type="button" variant="secondary" onClick={() => navigate("/students")} className="flex-1">
                         Cancel

@@ -61,13 +61,13 @@ export function StudentBulkUpload() {
 
             setUploadProgress(100);
             setProcessingStatus("Complete!");
-            setSuccess(`✅ Successfully uploaded ${response.data.created} students!`);
+            setSuccess(` Successfully uploaded ${response.data.created} students!`);
             setUploadResults(response.data);
             setFile(null);
             // Reset file input
             document.getElementById("csv-file").value = "";
         } catch (err) {
-            console.error("Bulk upload error:", err);
+
             const errorMsg = err.response?.data?.error ||
                 err.response?.data?.detail ||
                 "Failed to upload students. Please check the CSV format and try again.";
@@ -99,35 +99,35 @@ export function StudentBulkUpload() {
 
     return (
         <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">
                 Bulk Upload Students
             </h1>
 
             {error && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
                     {error}
                 </div>
             )}
 
             {success && (
-                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-lg">
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">
                     {success}
                 </div>
             )}
 
             {/* Upload Progress Bar */}
             {loading && (
-                <div className="mb-6 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+                <div className="mb-6 bg-white rounded-2xl p-6 shadow-lg">
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <span className="text-sm font-semibold text-gray-700">
                                 {processingStatus}
                             </span>
-                            <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                            <span className="text-sm font-bold text-blue-600">
                                 {uploadProgress}%
                             </span>
                         </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                             <div
                                 className="bg-gradient-to-r from-blue-500 to-purple-600 h-4 rounded-full transition-all duration-300 ease-out flex items-center justify-end pr-2"
                                 style={{ width: `${uploadProgress}%` }}
@@ -139,7 +139,7 @@ export function StudentBulkUpload() {
                                 )}
                             </div>
                         </div>
-                        <div className="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                             <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -152,14 +152,14 @@ export function StudentBulkUpload() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Upload Form */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                        📤 Upload CSV File
+                <div className="bg-white rounded-2xl p-8 shadow-lg">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                         Upload CSV File
                     </h2>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block font-semibold text-gray-700 mb-2">
                                 Select CSV File <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -168,11 +168,11 @@ export function StudentBulkUpload() {
                                 accept=".csv"
                                 onChange={handleFileChange}
                                 disabled={loading}
-                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             {file && !loading && (
-                                <p className="mt-2 text-sm text-green-600 dark:text-green-400">
-                                    ✓ Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                                <p className="mt-2 text-sm text-green-600">
+                                     Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
                                 </p>
                             )}
                         </div>
@@ -184,7 +184,7 @@ export function StudentBulkUpload() {
                                 disabled={!file || loading}
                                 className="flex-1"
                             >
-                                {loading ? `Uploading... ${uploadProgress}%` : 'Upload Students ✨'}
+                                {loading ? `Uploading... ${uploadProgress}%` : 'Upload Students '}
                             </Button>
                             <Button
                                 type="button"
@@ -200,14 +200,14 @@ export function StudentBulkUpload() {
                 </div>
 
                 {/* Instructions */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                        📋 Instructions
+                <div className="bg-white rounded-2xl p-8 shadow-lg">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                         Instructions
                     </h2>
 
-                    <div className="space-y-4 text-gray-700 dark:text-gray-300">
+                    <div className="space-y-4 text-gray-700">
                         <div>
-                            <h3 className="font-bold mb-2">✅ Required CSV Columns:</h3>
+                            <h3 className="font-bold mb-2"> Required CSV Columns:</h3>
                             <ul className="list-disc list-inside space-y-1 text-sm">
                                 <li>first_name (required)</li>
                                 <li>middle_name (optional)</li>
@@ -226,9 +226,9 @@ export function StudentBulkUpload() {
                             </ul>
                         </div>
 
-                        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
-                            <h3 className="font-bold mb-2 text-yellow-800 dark:text-yellow-300">⚠️ Important Notes:</h3>
-                            <ul className="list-disc list-inside space-y-1 text-sm text-yellow-700 dark:text-yellow-400">
+                        <div className="bg-yellow-50 p-3 rounded-lg">
+                            <h3 className="font-bold mb-2 text-yellow-800"> Important Notes:</h3>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-yellow-700">
                                 <li>First row MUST be column headers</li>
                                 <li><strong>DO NOT</strong> include admission_number (auto-generated)</li>
                                 <li>Class levels must exist in system (JSS1-JSS3, SS1-SS3)</li>
@@ -245,7 +245,7 @@ export function StudentBulkUpload() {
                             disabled={loading}
                             className="w-full"
                         >
-                            📥 Download Template
+                             Download Template
                         </Button>
                     </div>
                 </div>
@@ -253,28 +253,28 @@ export function StudentBulkUpload() {
 
             {/* Upload Results */}
             {uploadResults && (
-                <div className="mt-6 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                        📊 Upload Results
+                <div className="mt-6 bg-white rounded-2xl p-8 shadow-lg">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                         Upload Results
                     </h2>
 
                     {uploadResults.created !== undefined && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl">
-                                <p className="text-green-600 dark:text-green-400 font-semibold">Created</p>
-                                <p className="text-3xl font-bold text-green-700 dark:text-green-300">
+                            <div className="bg-green-50 p-4 rounded-xl">
+                                <p className="text-green-600 font-semibold">Created</p>
+                                <p className="text-3xl font-bold text-green-700">
                                     {uploadResults.created || 0}
                                 </p>
                             </div>
-                            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl">
-                                <p className="text-blue-600 dark:text-blue-400 font-semibold">Updated</p>
-                                <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+                            <div className="bg-blue-50 p-4 rounded-xl">
+                                <p className="text-blue-600 font-semibold">Updated</p>
+                                <p className="text-3xl font-bold text-blue-700">
                                     {uploadResults.updated || 0}
                                 </p>
                             </div>
-                            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl">
-                                <p className="text-red-600 dark:text-red-400 font-semibold">Failed</p>
-                                <p className="text-3xl font-bold text-red-700 dark:text-red-300">
+                            <div className="bg-red-50 p-4 rounded-xl">
+                                <p className="text-red-600 font-semibold">Failed</p>
+                                <p className="text-3xl font-bold text-red-700">
                                     {uploadResults.failed || uploadResults.errors?.length || 0}
                                 </p>
                             </div>
@@ -284,35 +284,35 @@ export function StudentBulkUpload() {
                     {/* Created Students with Credentials */}
                     {uploadResults.created_students && uploadResults.created_students.length > 0 && (
                         <div className="mb-6">
-                            <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                ✅ Created Students - Save These Credentials!
-                                <span className="text-sm font-normal text-red-600 dark:text-red-400">
+                            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                 Created Students - Save These Credentials!
+                                <span className="text-sm font-normal text-red-600">
                                     (Passwords shown only once!)
                                 </span>
                             </h3>
-                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-xl p-4 mb-4">
-                                <p className="text-yellow-800 dark:text-yellow-300 text-sm">
-                                    ⚠️ <strong>Important:</strong> Copy or screenshot these credentials now! Passwords won't be shown again.
+                            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-4">
+                                <p className="text-yellow-800 text-sm">
+                                     <strong>Important:</strong> Copy or screenshot these credentials now! Passwords won't be shown again.
                                 </p>
                             </div>
                             <div className="space-y-2 max-h-96 overflow-y-auto">
                                 {uploadResults.created_students.map((student, index) => (
                                     <div
                                         key={index}
-                                        className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border-2 border-green-200 dark:border-green-800"
+                                        className="bg-green-50 p-4 rounded-lg border-2 border-green-200"
                                     >
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                                             <div>
-                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Name:</span>{' '}
-                                                <span className="text-gray-900 dark:text-white">{student.full_name}</span>
+                                                <span className="font-semibold text-gray-700">Name:</span>{' '}
+                                                <span className="text-gray-900">{student.full_name}</span>
                                             </div>
                                             <div>
-                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Admission No:</span>{' '}
-                                                <span className="text-blue-700 dark:text-blue-300 font-mono font-bold">{student.admission_number}</span>
+                                                <span className="font-semibold text-gray-700">Admission No:</span>{' '}
+                                                <span className="text-blue-700 font-mono font-bold">{student.admission_number}</span>
                                             </div>
                                             <div>
-                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Password:</span>{' '}
-                                                <span className="text-green-700 dark:text-green-300 font-mono font-bold">{student.password}</span>
+                                                <span className="font-semibold text-gray-700">Password:</span>{' '}
+                                                <span className="text-green-700 font-mono font-bold">{student.password}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -324,7 +324,7 @@ export function StudentBulkUpload() {
                     {/* Errors */}
                     {uploadResults.errors && uploadResults.errors.length > 0 && (
                         <div>
-                            <h3 className="font-bold text-gray-900 dark:text-white mb-4">Errors:</h3>
+                            <h3 className="font-bold text-gray-900 mb-4">Errors:</h3>
                             <div className="space-y-2 max-h-96 overflow-y-auto">
                                 {uploadResults.errors.map((error, index) => {
                                     // Parse Django validation errors into human-readable messages
@@ -356,7 +356,7 @@ export function StudentBulkUpload() {
                                     return (
                                         <div
                                             key={index}
-                                            className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-sm text-red-700 dark:text-red-300 flex items-start gap-2"
+                                            className="bg-red-50 p-3 rounded-lg text-sm text-red-700 flex items-start gap-2"
                                         >
                                             <span className="text-red-500 font-bold shrink-0">Row {error.row}:</span>
                                             <span>{readableError}</span>

@@ -42,7 +42,7 @@ export function AdminForm() {
         password: "", // Never populate password field
       })
     } catch (error) {
-      console.error("Failed to fetch admin:", error)
+
       setError("Unable to fetch admin data. Please try again later.")
     }
   }
@@ -85,7 +85,7 @@ export function AdminForm() {
       }
       navigate("/admins")
     } catch (error) {
-      console.error("Failed to save admin:", error)
+
       setError(error.response?.data?.detail || "Failed to save admin. Please check the fields and try again.")
     } finally {
       setLoading(false)
@@ -94,20 +94,20 @@ export function AdminForm() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">
         {mode === "create" ? "Create New Admin" : "Edit Admin"}
       </h1>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-lg space-y-6">
         {/* Personal Info */}
         <div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 pb-4 border-b-2 border-blue-500">
             Personal Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -163,12 +163,12 @@ export function AdminForm() {
 
         {/* Additional Info */}
         <div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 pb-4 border-b-2 border-blue-500">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 pb-4 border-b-2 border-blue-500">
             Additional Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Sex</label>
+              <label className="block font-semibold text-gray-700 mb-2">Sex</label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -177,7 +177,7 @@ export function AdminForm() {
                     checked={formData.sex === "male"}
                     onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
                   />
-                  <span>Male 👨</span>
+                  <span>Male </span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -186,20 +186,20 @@ export function AdminForm() {
                     checked={formData.sex === "female"}
                     onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
                   />
-                  <span>Female 👩</span>
+                  <span>Female </span>
                 </label>
               </div>
             </div>
 
             <div>
-              <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Role</label>
+              <label className="block font-semibold text-gray-700 mb-2">Role</label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200"
                 disabled={user?.role === 'admin' && formData.role === 'superadmin'} // Admins can't change superadmins
               >
-                <option value="admin">🔑 Admin</option>
+                <option value="admin"> Admin</option>
                 {user?.role === 'superadmin' && <option value="superadmin">⭐ Superadmin</option>}
               </select>
               {user?.role === 'admin' && (
@@ -227,7 +227,7 @@ export function AdminForm() {
 
         <div className="flex gap-4 pt-6">
           <Button type="submit" loading={loading} className="flex-1">
-            {mode === "create" ? "Create Admin" : "Update Admin"} ✨
+            {mode === "create" ? "Create Admin" : "Update Admin"} 
           </Button>
           <Button type="button" variant="secondary" onClick={() => navigate("/admins")} className="flex-1">
             Cancel

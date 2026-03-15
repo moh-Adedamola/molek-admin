@@ -28,7 +28,7 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
       const response = await contentAPI.list(params)
       setContent(response.data.results || response.data || [])
     } catch (error) {
-      console.error("Failed to fetch content:", error)
+
     } finally {
       setLoading(false)
     }
@@ -40,7 +40,7 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
       setContent(content.filter((c) => c.id !== deleteModal.contentId))
       setDeleteModal({ isOpen: false, contentId: null })
     } catch (error) {
-      console.error("Failed to delete content:", error)
+
     }
   }
 
@@ -49,17 +49,17 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
       await contentAPI.update(item.id, { published: !item.published })
       setContent(content.map((c) => (c.id === item.id ? { ...c, published: !c.published } : c)))
     } catch (error) {
-      console.error("Failed to update content:", error)
+
     }
   }
 
   const getTypeIcon = (type) => {
     const icons = {
-      image: "📸",
-      video: "🎬",
-      news: "📰"
+      image: "",
+      video: "",
+      news: ""
     }
-    return icons[type] || "📄"
+    return icons[type] || ""
   }
 
   const createPath = defaultContentType === "news" ? "/news/create" : "/content/create"
@@ -68,7 +68,7 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{pageTitle}</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{pageTitle}</h1>
         <Button onClick={() => navigate(createPath)}>
           Add {defaultContentType === "news" ? "News" : "Content"} +
         </Button>
@@ -90,7 +90,7 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
                 className={`px-4 py-3 rounded-xl font-semibold transition-all ${
                   typeFilter === type
                     ? "bg-blue-500 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300"
+                    : "bg-gray-200 text-gray-900 hover:bg-gray-300"
                 }`}
               >
                 {type === "all" ? "All" : `${getTypeIcon(type)} ${type.charAt(0).toUpperCase() + type.slice(1)}`}
@@ -111,7 +111,7 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
           {content.map((item) => (
             <div
               key={item.id}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow"
+              className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow"
             >
               <div className="flex flex-col md:flex-row gap-6">
                 {item.media_url && item.content_type !== 'news' && (
@@ -135,30 +135,30 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">{item.title}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <h3 className="text-xl font-bold text-gray-900">{item.title}</h3>
+                      <p className="text-sm text-gray-600">
                         {getTypeIcon(item.content_type)} {item.content_type_display || item.content_type.toUpperCase()}
                       </p>
                     </div>
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-semibold ${
                         item.published
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
                       }`}
                     >
                       {item.published ? "Published" : "Draft"}
                     </span>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">{item.description}</p>
+                  <p className="text-gray-600 mb-4 line-clamp-2">{item.description}</p>
                   <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-500 dark:text-gray-500">
+                    <div className="text-sm text-gray-500">
                       By {item.created_by?.full_name || "Admin"} • {new Date(item.publish_date).toLocaleDateString()}
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => togglePublished(item)}
-                        className="px-3 py-2 rounded-lg text-sm font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                        className="px-3 py-2 rounded-lg text-sm font-semibold bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
                       >
                         {item.published ? "Unpublish" : "Publish"}
                       </button>
@@ -190,7 +190,7 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
           { label: "Delete", variant: "danger", onClick: handleDelete },
         ]}
       >
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-600">
           Are you sure you want to delete this content? This action cannot be undone.
         </p>
       </Modal>
