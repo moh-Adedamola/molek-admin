@@ -59,11 +59,16 @@ export function UnifiedScoreUpload() {
             uploadFormData.append('term', formData.termId);
 
             const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://molek-school-backend-production.up.railway.app';
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
+            
             const response = await fetch(`${baseUrl}/api/exam-results/unified-upload/`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` },
-                body: uploadFormData
+                body: uploadFormData,
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
 
             const data = await response.json();
             if (response.ok) {
@@ -82,7 +87,12 @@ export function UnifiedScoreUpload() {
                 if (data.errors) setResult({ errors: data.errors });
             }
         } catch (error) {
-            setAlert({ type: 'error', message: 'Could not connect to the server. Check your internet connection.' });
+            const isTimeout = error?.name === 'AbortError';
+            setAlert({ type: isTimeout ? 'warning' : 'error', 
+                message: isTimeout 
+                    ? 'Upload is taking longer than expected. The scores may still be processing — check Results Manager in a moment.'
+                    : 'Could not connect to the server. Check your internet connection.' 
+            });
         } finally { setUploading(false); }
     };
 
