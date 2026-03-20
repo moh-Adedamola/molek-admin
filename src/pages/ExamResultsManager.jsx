@@ -26,7 +26,7 @@ export function ExamResultsManager() {
     const [newResult, setNewResult] = useState({ student: '', subject: '', session: '', term: '', ca1_score: '', ca2_score: '', obj_score: '', theory_score: '' });
 
     useEffect(() => { fetchDropdownData(); }, []);
-    useEffect(() => { if (filters.session && filters.term) fetchResults(); }, [filters.session, filters.term, filters.class_level, currentPage]);
+    useEffect(() => { if (filters.session && filters.term && filters.subject) fetchResults(); }, [filters.session, filters.term, filters.class_level, filters.subject, currentPage]);
     useEffect(() => { setCurrentPage(1); }, [filters.session, filters.term, filters.class_level, filters.student, filters.subject]);
 
     const fetchDropdownData = async () => {
@@ -220,7 +220,7 @@ export function ExamResultsManager() {
                     </div>
                 ) : results.length === 0 ? (
                     <div className="p-12 text-center">
-                        <p className="text-sm text-gray-500">No results found. Select a session and term to get started.</p>
+                        <p className="text-sm text-gray-500">{!filters.subject ? 'Select a subject to view results.' : 'No results found for the selected filters.'}</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">

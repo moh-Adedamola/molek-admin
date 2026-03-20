@@ -29,7 +29,7 @@ export function Dashboard() {
                 news: contentRes.data.total_news || 0,
             });
         } catch (error) {
-            console.error("Failed to fetch stats:", error);
+            // stats fetch failed
         } finally { setLoading(false); }
     };
 
