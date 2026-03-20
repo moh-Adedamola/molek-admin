@@ -225,7 +225,7 @@ export function UnifiedScoreUpload() {
             {/* Results */}
             {result && result.created !== undefined && (
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
-                    <h2 className="text-sm font-semibold text-gray-900 mb-4">Upload summary</h2>
+                    <h2 className="text-sm font-semibold text-gray-900 mb-4">upload summary</h2>
                     <div className="grid grid-cols-4 gap-3 mb-4">
                         {[
                             { label: 'Created', value: result.created || 0, color: 'text-green-700' },
