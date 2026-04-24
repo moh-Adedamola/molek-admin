@@ -23,6 +23,9 @@ import { AcademicSetup } from "./pages/Academicsetup.jsx"
 import { ExamResultsManager } from "./pages/ExamResultsManager"
 // Unified Score Upload
 import { UnifiedScoreUpload } from "./pages/UnifiedScoreUpload"
+// Fees & Behavioral Management
+import { FeesManager } from "./pages/FeesManager"
+import { BehavioralManager } from "./pages/BehavioralManager"
 
 export default function Routes() {
     const { isAuthenticated } = useAuth()
@@ -157,6 +160,26 @@ export default function Routes() {
                 element={
                     <PrivateRoute requiredRoles={["admin", "superadmin"]}>
                         <ExamResultsManager />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* Fees Manager */}
+            <Route
+                path="/fees"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <FeesManager />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* Behavioral Assessment Manager */}
+            <Route
+                path="/behavioral"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <BehavioralManager />
                     </PrivateRoute>
                 }
             />

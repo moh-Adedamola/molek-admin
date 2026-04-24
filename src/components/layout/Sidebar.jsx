@@ -3,7 +3,8 @@ import { useState } from "react"
 import { useAuth } from "../../hooks/useAuth"
 import {
     LayoutDashboard, Users, GraduationCap, ArrowUpCircle, Settings,
-    Upload, ClipboardList, Film, Newspaper, Image, ChevronDown, ChevronRight, Menu, X
+    Upload, ClipboardList, Film, Newspaper, Image, ChevronDown, ChevronRight, Menu, X,
+    Wallet, HeartHandshake
 } from "lucide-react"
 
 const navGroups = [
@@ -19,6 +20,7 @@ const navGroups = [
             { path: "/admins", label: "Admins", icon: Users },
             { path: "/students", label: "Students", icon: GraduationCap },
             { path: "/students/promote", label: "Promotion", icon: ArrowUpCircle },
+            { path: "/fees", label: "Fees", icon: Wallet },
         ]
     },
     {
@@ -27,6 +29,7 @@ const navGroups = [
             { path: "/academic-setup", label: "Setup", icon: Settings },
             { path: "/upload-scores", label: "Upload Scores", icon: Upload },
             { path: "/results-manager", label: "Results", icon: ClipboardList },
+            { path: "/behavioral", label: "Behavioral", icon: HeartHandshake },
         ]
     },
     {

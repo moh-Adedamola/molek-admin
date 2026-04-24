@@ -359,6 +359,56 @@ export const examResultsAPI = {
     getByStudent: (studentId, params = {}) => cachedGet(`/api/exam-results/student/${studentId}/`, { params }, CACHE_TTL.data),
 };
 
+
+// ============================================
+// FEES MANAGEMENT API
+// ============================================
+export const feesAPI = {
+    overview: (params = {}) => cachedGet("/api/users/fees/overview/", { params }, CACHE_TTL.stats),
+    downloadTemplate: (params = {}) => api.get("/api/users/fees/template/", { params, responseType: 'blob' }),
+    bulkUpload: (formData, config = {}) => {
+        invalidatePrefix("/api/students");
+        invalidatePrefix("/api/users/fees");
+        return api.post("/api/users/fees/bulk-upload/", formData, {
+            headers: { "Content-Type": "multipart/form-data" }, ...config,
+        });
+    },
+    toggle: (studentId) => {
+        invalidatePrefix("/api/students");
+        invalidatePrefix("/api/users/fees");
+        return api.post(`/api/users/fees/toggle/${studentId}/`);
+    },
+    bulkSet: (studentIds, paid) => {
+        invalidatePrefix("/api/students");
+        invalidatePrefix("/api/users/fees");
+        return api.post("/api/users/fees/bulk-set/", { student_ids: studentIds, paid });
+    },
+    resetAll: () => {
+        invalidatePrefix("/api/students");
+        invalidatePrefix("/api/users/fees");
+        return api.post("/api/users/fees/reset-all/", { confirm: true });
+    },
+};
+
+// ============================================
+// BEHAVIORAL ASSESSMENT API
+// ============================================
+export const behavioralAPI = {
+    list: (params = {}) => cachedGet("/api/users/behavioral-assessments/", { params }, CACHE_TTL.data),
+    get: (id) => cachedGet(`/api/users/behavioral-assessments/${id}/`, {}, CACHE_TTL.data),
+    create: (data) => { invalidatePrefix("/api/users/behavioral"); return api.post("/api/users/behavioral-assessments/", data); },
+    update: (id, data) => { invalidatePrefix("/api/users/behavioral"); return api.put(`/api/users/behavioral-assessments/${id}/`, data); },
+    partialUpdate: (id, data) => { invalidatePrefix("/api/users/behavioral"); return api.patch(`/api/users/behavioral-assessments/${id}/`, data); },
+    delete: (id) => { invalidatePrefix("/api/users/behavioral"); return api.delete(`/api/users/behavioral-assessments/${id}/`); },
+    downloadTemplate: (params = {}) => api.get("/api/users/behavioral/template/", { params, responseType: 'blob' }),
+    bulkUpload: (formData, config = {}) => {
+        invalidatePrefix("/api/users/behavioral");
+        return api.post("/api/users/behavioral/bulk-upload/", formData, {
+            headers: { "Content-Type": "multipart/form-data" }, ...config,
+        });
+    },
+};
+
 // ============================================
 // LEGACY WRAPPERS (deprecated — use named APIs above)
 // ============================================
