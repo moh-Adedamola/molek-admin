@@ -9,6 +9,8 @@ import { ContentList } from "./pages/ContentList"
 import { ContentForm } from "./pages/ContentForm"
 import { GalleryList } from "./pages/GalleryList"
 import { GalleryForm } from "./pages/GalleryForm"
+import { EventList } from "./pages/EventList"
+import { EventForm } from "./pages/EventForm"
 import { Profile } from "./pages/Profile"
 import { NotFound } from "./pages/NotFound"
 // Student Management Imports
@@ -250,6 +252,32 @@ export default function Routes() {
                 element={
                     <PrivateRoute requiredRoles={["admin", "superadmin"]}>
                         <GalleryForm />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* Events Management */}
+            <Route
+                path="/events"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <EventList />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/events/new"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <EventForm />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/events/:id/edit"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <EventForm />
                     </PrivateRoute>
                 }
             />

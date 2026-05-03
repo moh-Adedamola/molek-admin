@@ -221,6 +221,9 @@ export function BehavioralManager() {
                                     <th className="px-3 py-2 text-center" title="Sense of Responsibility">SR</th>
                                     <th className="px-3 py-2 text-center" title="Obedience">Obe</th>
                                     <th className="px-3 py-2 text-center" title="Organizational Ability">Org</th>
+                                    <th className="px-3 py-2 text-center bg-blue-50" title="Times school opened this term">Days Open</th>
+                                    <th className="px-3 py-2 text-center bg-blue-50" title="Times student was present">Present</th>
+                                    <th className="px-3 py-2 text-center bg-blue-50" title="Public holidays">Hol</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -231,6 +234,9 @@ export function BehavioralManager() {
                                         <Cell v={a.neatness} /><Cell v={a.politeness} /><Cell v={a.honesty} />
                                         <Cell v={a.self_control} /><Cell v={a.relationship_others} /><Cell v={a.sense_responsibility} />
                                         <Cell v={a.obedience} /><Cell v={a.organizational_ability} />
+                                        <td className="px-3 py-2 text-center text-gray-700 bg-blue-50/30">{a.times_school_opened ?? '—'}</td>
+                                        <td className="px-3 py-2 text-center text-gray-700 bg-blue-50/30">{a.times_present ?? '—'}</td>
+                                        <td className="px-3 py-2 text-center text-gray-700 bg-blue-50/30">{a.public_holidays ?? '—'}</td>
                                     </tr>
                                 ))}
                             </tbody>

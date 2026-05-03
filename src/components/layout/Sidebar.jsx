@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/useAuth"
 import {
     LayoutDashboard, Users, GraduationCap, ArrowUpCircle, Settings,
     Upload, ClipboardList, Film, Newspaper, Image, ChevronDown, ChevronRight, Menu, X,
-    Wallet, HeartHandshake
+    Wallet, HeartHandshake, CalendarDays, Calendar
 } from "lucide-react"
 
 const navGroups = [
@@ -38,6 +38,7 @@ const navGroups = [
             { path: "/content", label: "Content", icon: Film },
             { path: "/news", label: "News", icon: Newspaper },
             { path: "/galleries", label: "Galleries", icon: Image },
+            { path: "/events", label: "Events", icon: CalendarDays },
         ]
     },
 ]
@@ -127,11 +128,11 @@ export function Sidebar() {
                 {/* User info at bottom */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-gray-50/50">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        {/* <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                             <span className="text-sm font-bold text-blue-700">
                                 {(user?.full_name || user?.username || "A").charAt(0).toUpperCase()}
                             </span>
-                        </div>
+                        </div>*/}
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">{user?.full_name || user?.username}</p>
                             <p className="text-[11px] text-gray-500 capitalize">{user?.role || "admin"}</p>

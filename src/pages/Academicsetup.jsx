@@ -32,7 +32,8 @@ export function AcademicSetup() {
         name: "First Term",
         start_date: "",
         end_date: "",
-        is_current: false
+        school_resumes: "",
+        is_current: false,
     });
 
     useEffect(() => {
@@ -130,7 +131,7 @@ export function AcademicSetup() {
         try {
             await termsAPI.create(termForm);
             setSuccess(" Term created successfully!");
-            setTermForm({ session: "", name: "First Term", start_date: "", end_date: "", is_current: false });
+            setTermForm({ session: "", name: "First Term", start_date: "", end_date: "", school_resumes: "", is_current: false });
             await fetchAllData();
         } catch (err) {
             setError("Failed to create term: " + (err.response?.data?.detail || err.message));
@@ -407,6 +408,12 @@ export function AcademicSetup() {
                                     value={termForm.end_date}
                                     onChange={(e) => setTermForm({...termForm, end_date: e.target.value})}
                                     required
+                                />
+                                <Input
+                                    label="School Resumes On"
+                                    type="date"
+                                    value={termForm.school_resumes}
+                                    onChange={(e) => setTermForm({...termForm, school_resumes: e.target.value})}
                                 />
                                 <div className="flex items-end">
                                     <Button type="submit" loading={loading} className="w-full">
