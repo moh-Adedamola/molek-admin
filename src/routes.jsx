@@ -233,7 +233,7 @@ export default function Routes() {
                 path="/news/:id/edit"
                 element={
                     <PrivateRoute requiredRoles={["admin", "superadmin"]}>
-                        <ContentForm />
+                        <ContentForm defaultContentType="news" />
                     </PrivateRoute>
                 }
             />

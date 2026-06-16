@@ -5,6 +5,19 @@ import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 import { Modal } from "../components/ui/Modal"
 
+// Strip HTML tags for plain-text previews in the list.
+const stripHtml = (html) => {
+  if (!html) return ""
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 export function ContentList({ defaultContentType = "all", pageTitle = "Content Management" }) {
   const navigate = useNavigate()
   const [content, setContent] = useState([])
@@ -150,7 +163,7 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
                       {item.published ? "Published" : "Draft"}
                     </span>
                   </div>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{item.description}</p>
+                  <p className="text-gray-600 mb-4 line-clamp-2">{stripHtml(item.description)}</p>
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-500">
                       By {item.created_by?.full_name || "Admin"} • {new Date(item.publish_date).toLocaleDateString()}

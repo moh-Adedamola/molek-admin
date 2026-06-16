@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { contentAPI } from "../api/endpoints"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
+import { RichTextEditor } from "../components/ui/RichTextEditor"
 
 export function ContentForm({ defaultContentType = "image" }) {
   const navigate = useNavigate()
@@ -85,7 +86,7 @@ export function ContentForm({ defaultContentType = "image" }) {
         submitData.append('content_type', formData.content_type)
         submitData.append('published', formData.published)
         submitData.append('is_active', formData.is_active)
-        
+
         // Add media file if exists
         if (formData.media) {
           submitData.append('media', formData.media)
@@ -100,7 +101,7 @@ export function ContentForm({ defaultContentType = "image" }) {
         submitData.append('content_type', formData.content_type)
         submitData.append('published', formData.published)
         submitData.append('is_active', formData.is_active)
-        
+
         // Only add media if a new file was selected
         if (formData.media && formData.media instanceof File) {
           submitData.append('media', formData.media)
@@ -108,7 +109,7 @@ export function ContentForm({ defaultContentType = "image" }) {
 
         await contentAPI.update(id, submitData)
       }
-      navigate(defaultContentType === "news" ? "/news" : "/content")
+      navigate(formData.content_type === "news" ? "/news" : "/content")
     } catch (error) {
 
 
@@ -140,14 +141,16 @@ export function ContentForm({ defaultContentType = "image" }) {
                 required
               />
               <div>
-                <label className="block font-semibold text-gray-700 mb-2">Description</label>
-                <textarea
+                <label className="block font-semibold text-gray-700 mb-2">
+                  {isNewsType ? "Article Body" : "Description"}
+                </label>
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none"
-                  rows={isNewsType ? "8" : "4"}
-                  placeholder={isNewsType ? "Write your news article content here..." : "Brief description..."}
+                  onChange={(html) => setFormData((f) => ({ ...f, description: html }))}
                 />
+                <p className="text-xs text-gray-400 mt-2">
+                  Use the toolbar for headings, bold, lists and links. Formatting is saved.
+                </p>
               </div>
             </div>
           </div>
@@ -217,12 +220,12 @@ export function ContentForm({ defaultContentType = "image" }) {
 
           <div className="flex gap-4 pt-6">
             <Button type="submit" loading={loading} className="flex-1">
-              {mode === "create" ? "Create" : "Update"} {isNewsType ? "News" : "Content"} 
+              {mode === "create" ? "Create" : "Update"} {isNewsType ? "News" : "Content"}
             </Button>
             <Button
               type="button"
               variant="secondary"
-              onClick={() => navigate(defaultContentType === "news" ? "/news" : "/content")}
+              onClick={() => navigate(formData.content_type === "news" ? "/news" : "/content")}
               className="flex-1"
             >
               Cancel
