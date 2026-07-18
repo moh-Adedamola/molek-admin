@@ -643,6 +643,12 @@ export const behavioralAPI = {
   },
 };
 
+export const broadsheetAPI = {
+  // Read-only cumulative broadsheet aggregation
+  get: (params = {}) =>
+    cachedGet("/api/users/broadsheet/", { params }, CACHE_TTL.data),
+};
+
 // ============================================
 // LEGACY WRAPPERS (deprecated — use named APIs above)
 // ============================================

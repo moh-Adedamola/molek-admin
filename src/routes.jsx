@@ -28,6 +28,8 @@ import { UnifiedScoreUpload } from "./pages/UnifiedScoreUpload"
 // Fees & Behavioral Management
 import { FeesManager } from "./pages/FeesManager"
 import { BehavioralManager } from "./pages/BehavioralManager"
+// Broadsheet (cumulative results grid)
+import { Broadsheet } from "./pages/Broadsheet"
 
 export default function Routes() {
     const { isAuthenticated } = useAuth()
@@ -182,6 +184,16 @@ export default function Routes() {
                 element={
                     <PrivateRoute requiredRoles={["admin", "superadmin"]}>
                         <BehavioralManager />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* Broadsheet - cumulative results grid */}
+            <Route
+                path="/broadsheet"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <Broadsheet />
                     </PrivateRoute>
                 }
             />
