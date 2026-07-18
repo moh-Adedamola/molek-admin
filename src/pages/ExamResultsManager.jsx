@@ -82,7 +82,7 @@ export function ExamResultsManager() {
             setNewResult({ student: '', subject: '', session: filters.session, term: filters.term, ca1_score: '', ca2_score: '', obj_score: '', theory_score: '' });
             fetchResults();
         } catch (err) {
-            setMessage({ type: 'error', text: err.response?.data?.detail || 'Could not add result. Please try again.' });
+            setMessage({ type: 'error', text: formatApiError(err, 'Could not add result. Please try again.') });
         } finally { setLoading(false); }
     };
 
@@ -98,7 +98,7 @@ export function ExamResultsManager() {
             });
             setMessage({ type: 'success', text: 'Result updated.' }); setShowEditModal(false); setEditingResult(null); fetchResults();
         } catch (err) {
-            setMessage({ type: 'error', text: 'Could not update result.' });
+            setMessage({ type: 'error', text: formatApiError(err, 'Could not update result.') });
         } finally { setLoading(false); }
     };
 
@@ -132,13 +132,27 @@ export function ExamResultsManager() {
     }[grade] || 'bg-gray-100 text-gray-600');
 
     const calcTotal = (ca1, ca2, obj, theory) => (parseFloat(ca1) || 0) + (parseFloat(ca2) || 0) + (parseFloat(obj) || 0) + (parseFloat(theory) || 0);
+
+    // Turn a DRF validation response ({field: ["msg"], non_field_errors: [...]})
+    // into readable text so the admin sees the actual reason, not a generic 400.
+    const formatApiError = (err, fallback) => {
+        const data = err?.response?.data;
+        if (!data || typeof data === 'string') return fallback;
+        if (data.detail) return data.detail;
+        if (data.error) return data.error;
+        const parts = Object.entries(data).map(([field, msgs]) => {
+            const text = Array.isArray(msgs) ? msgs.join(' ') : String(msgs);
+            return field === 'non_field_errors' ? text : `${field}: ${text}`;
+        });
+        return parts.length ? parts.join(' | ') : fallback;
+    };
     const filteredTerms = terms.filter(t => !filters.session || t.session === parseInt(filters.session));
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    const ScoreInput = ({ label, value, onChange }) => (
+    const ScoreInput = ({ label, value, onChange, max = 100 }) => (
         <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-            <input type="number" min="0" max="100" step="0.5" value={value} onChange={onChange}
+            <input type="number" min="0" max={max} step="0.5" value={value} onChange={onChange}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
         </div>
     );
@@ -328,10 +342,10 @@ export function ExamResultsManager() {
                             </div>
                         </div>
                         <div className="grid grid-cols-4 gap-3">
-                            <ScoreInput label="CA1" value={newResult.ca1_score} onChange={(e) => setNewResult({ ...newResult, ca1_score: e.target.value })} />
-                            <ScoreInput label="CA2" value={newResult.ca2_score} onChange={(e) => setNewResult({ ...newResult, ca2_score: e.target.value })} />
-                            <ScoreInput label="OBJ" value={newResult.obj_score} onChange={(e) => setNewResult({ ...newResult, obj_score: e.target.value })} />
-                            <ScoreInput label="Theory" value={newResult.theory_score} onChange={(e) => setNewResult({ ...newResult, theory_score: e.target.value })} />
+                            <ScoreInput label="CA1 (max 15)" max={15} value={newResult.ca1_score} onChange={(e) => setNewResult({ ...newResult, ca1_score: e.target.value })} />
+                            <ScoreInput label="CA2 (max 15)" max={15} value={newResult.ca2_score} onChange={(e) => setNewResult({ ...newResult, ca2_score: e.target.value })} />
+                            <ScoreInput label="OBJ (max 30)" max={30} value={newResult.obj_score} onChange={(e) => setNewResult({ ...newResult, obj_score: e.target.value })} />
+                            <ScoreInput label="Theory (max 40)" max={40} value={newResult.theory_score} onChange={(e) => setNewResult({ ...newResult, theory_score: e.target.value })} />
                         </div>
                         <div className="bg-gray-50 p-3 rounded-lg text-sm">
                             <span className="font-medium">Total:</span> {calcTotal(newResult.ca1_score, newResult.ca2_score, newResult.obj_score, newResult.theory_score)} / 100
@@ -353,10 +367,10 @@ export function ExamResultsManager() {
                             <p><span className="font-medium">Subject:</span> {editingResult.subject_name}</p>
                         </div>
                         <div className="grid grid-cols-4 gap-3">
-                            <ScoreInput label="CA1" value={editingResult.ca1_score} onChange={(e) => setEditingResult({ ...editingResult, ca1_score: e.target.value })} />
-                            <ScoreInput label="CA2" value={editingResult.ca2_score} onChange={(e) => setEditingResult({ ...editingResult, ca2_score: e.target.value })} />
-                            <ScoreInput label="OBJ" value={editingResult.obj_score} onChange={(e) => setEditingResult({ ...editingResult, obj_score: e.target.value })} />
-                            <ScoreInput label="Theory" value={editingResult.theory_score} onChange={(e) => setEditingResult({ ...editingResult, theory_score: e.target.value })} />
+                            <ScoreInput label="CA1 (max 15)" max={15} value={editingResult.ca1_score} onChange={(e) => setEditingResult({ ...editingResult, ca1_score: e.target.value })} />
+                            <ScoreInput label="CA2 (max 15)" max={15} value={editingResult.ca2_score} onChange={(e) => setEditingResult({ ...editingResult, ca2_score: e.target.value })} />
+                            <ScoreInput label="OBJ (max 30)" max={30} value={editingResult.obj_score} onChange={(e) => setEditingResult({ ...editingResult, obj_score: e.target.value })} />
+                            <ScoreInput label="Theory (max 40)" max={40} value={editingResult.theory_score} onChange={(e) => setEditingResult({ ...editingResult, theory_score: e.target.value })} />
                         </div>
                         <div className="bg-gray-50 p-3 rounded-lg text-sm">
                             <span className="font-medium">New total:</span> {calcTotal(editingResult.ca1_score, editingResult.ca2_score, editingResult.obj_score, editingResult.theory_score)} / 100
