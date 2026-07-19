@@ -75,45 +75,77 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle token expiration and refresh
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    const refreshToken = localStorage.getItem("refreshToken");
+// Handle token expiration and refresh.
+// The backend rotates refresh tokens (ROTATE_REFRESH_TOKENS +
+// BLACKLIST_AFTER_ROTATION): every successful refresh returns a NEW refresh
+// token and blacklists the old one, so we must persist both tokens.
+// Refreshing is single-flight so parallel 401s (Promise.all pages) share one
+// refresh call instead of racing the rotation and killing the session.
+let refreshInFlight = null;
 
-    if (
-      error.response?.status === 401 &&
-      refreshToken &&
-      !originalRequest._retry
-    ) {
-      originalRequest._retry = true;
+const refreshAccessToken = () => {
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) return null;
       try {
         const res = await axios.post(`${API_BASE}/api/token/refresh/`, {
           refresh: refreshToken,
         });
         const newAccessToken = res.data.access;
+        if (!newAccessToken) return null;
         localStorage.setItem("accessToken", newAccessToken);
+        if (res.data.refresh) {
+          // Rotation: keep the chain alive for the full 7-day window.
+          localStorage.setItem("refreshToken", res.data.refresh);
+        }
+        return newAccessToken;
+      } catch {
+        return null;
+      }
+    })();
+    refreshInFlight.finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Never try to refresh (or force-logout) the auth endpoints themselves:
+    // a failed login must simply surface its error to the form.
+    const isAuthUrl =
+      typeof originalRequest?.url === "string" &&
+      originalRequest.url.includes("/api/token/");
+
+    if (
+      error.response?.status === 401 &&
+      !isAuthUrl &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+      const newAccessToken = await refreshAccessToken();
+      if (newAccessToken) {
         const authHeader = newAccessToken.startsWith("eyJ")
           ? `Bearer ${newAccessToken}`
           : `Token ${newAccessToken}`;
         api.defaults.headers.common["Authorization"] = authHeader;
         originalRequest.headers["Authorization"] = authHeader;
         return api(originalRequest);
-      } catch {
-        localStorage.clear();
-        invalidateAll();
-        window.location.href = "/login";
       }
-    }
-
-    if ([401, 403].includes(error.response?.status)) {
+      // No refresh token, or the refresh failed: the session is over.
       localStorage.clear();
       invalidateAll();
       delete api.defaults.headers.common["Authorization"];
       window.location.href = "/login";
     }
 
+    // 403 means authenticated-but-not-permitted: surface it to the caller
+    // instead of destroying the whole session.
     return Promise.reject(error);
   },
 );
