@@ -451,6 +451,17 @@ export const subjectsAPI = {
     invalidatePrefix("/api/subjects");
     return api.delete(`/api/subjects/${id}/`);
   },
+  // Force delete: removes the subject AND all its results/scores.
+  forceDelete: (id) => {
+    invalidatePrefix("/api/subjects");
+    return api.delete(`/api/subjects/${id}/?force=true`);
+  },
+  // Move all results/scores from `id` onto `targetId`, then delete `id`.
+  mergeInto: (id, targetId) => {
+    invalidatePrefix("/api/subjects");
+    invalidatePrefix("/api/exam-results");
+    return api.post(`/api/subjects/${id}/merge-into/`, { target_id: targetId });
+  },
 };
 
 // ============================================

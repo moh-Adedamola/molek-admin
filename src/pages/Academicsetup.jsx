@@ -156,7 +156,65 @@ export function AcademicSetup() {
             await fetchAllData();
             setSuccess(" Deleted successfully!");
         } catch (err) {
-            setError("Failed to delete: " + (err.response?.data?.detail || err.message));
+            // The backend returns 409 with usage counts when a subject is in
+            // use. Offer force-delete or point the admin at merge.
+            const data = err.response?.data;
+            if (type === "subject" && err.response?.status === 409) {
+                const msg =
+                    `"${subjects.find((x) => x.id === id)?.name || "Subject"}" is in use: ` +
+                    `${data.exam_results} exam result(s), ${data.ca_scores} CA score(s)` +
+                    (data.promotion_rules?.length ? `, and ${data.promotion_rules.length} promotion rule(s)` : "") +
+                    `.\n\nOK = delete the subject AND all those records permanently.\n` +
+                    `Cancel = keep it (use "Merge into…" instead to preserve the marks).`;
+                if (window.confirm(msg)) {
+                    try {
+                        await subjectsAPI.forceDelete(id);
+                        await fetchAllData();
+                        setSuccess(" Subject and its records deleted.");
+                    } catch (e2) {
+                        setError("Force delete failed: " + (e2.response?.data?.error || e2.message));
+                    }
+                }
+            } else {
+                setError("Failed to delete: " + (data?.error || data?.detail || err.message));
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleMergeSubject = async (sourceId) => {
+        const source = subjects.find((x) => x.id === sourceId);
+        const options = subjects.filter((x) => x.id !== sourceId);
+        if (!options.length) {
+            setError("Need at least one other subject to merge into.");
+            return;
+        }
+        const list = options.map((x, i) => `${i + 1}. ${x.name} (${x.code})`).join("\n");
+        const pick = window.prompt(
+            `Merge "${source?.name}" INTO which subject?\n\n${list}\n\n` +
+            `All of "${source?.name}"'s results move to your choice, then it is deleted.\n` +
+            `Enter a number:`,
+        );
+        if (!pick) return;
+        const idx = parseInt(pick, 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= options.length) {
+            setError("Invalid choice.");
+            return;
+        }
+        const target = options[idx];
+        if (!window.confirm(`Merge "${source?.name}" into "${target.name}"? This cannot be undone.`)) return;
+        setLoading(true);
+        try {
+            const res = await subjectsAPI.mergeInto(sourceId, target.id);
+            await fetchAllData();
+            const d = res.data;
+            setSuccess(
+                ` Merged "${d.merged_from}" into "${d.merged_into}": ` +
+                `${d.exam_results_moved} result(s) moved, ${d.duplicate_rows_dropped} duplicate(s) dropped.`,
+            );
+        } catch (err) {
+            setError("Merge failed: " + (err.response?.data?.error || err.message));
         } finally {
             setLoading(false);
         }
@@ -518,6 +576,21 @@ export function AcademicSetup() {
                                     </div>
                                     <div className="text-xs text-gray-600 mt-1">
                                         Code: {subject.code}
+                                    </div>
+                                    <div className="flex gap-2 mt-2">
+                                        <button
+                                            onClick={() => handleMergeSubject(subject.id)}
+                                            className="text-xs px-2 py-1 rounded bg-white border border-purple-300 text-purple-700 hover:bg-purple-100"
+                                            title="Move this subject's results into another subject, then delete it"
+                                        >
+                                            Merge into…
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(subject.id, "subject")}
+                                            className="text-xs px-2 py-1 rounded bg-white border border-red-300 text-red-600 hover:bg-red-50"
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
                                 </div>
                             ))}
