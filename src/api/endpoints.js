@@ -345,7 +345,10 @@ export const studentsAPI = {
     api.get("/api/students/export-for-cbt/", { params, responseType: "blob" }),
   promoteStudents: (data) => {
     invalidatePrefix("/api/students");
-    return api.post("/api/students/promote_class/", data);
+    // Correct endpoint: the bulk-promotion view lives under the users app.
+    // (The old /api/students/promote_class/ hit the student detail route,
+    // which rejects POST -> 405.)
+    return api.post("/api/users/promotion/promote/", data);
   },
 
   getPromotionAnalysis: (params) =>
