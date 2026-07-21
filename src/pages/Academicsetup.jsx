@@ -220,6 +220,35 @@ export function AcademicSetup() {
         }
     };
 
+    const handleRenameSubject = async (subject) => {
+        const newName = window.prompt(
+            `Fix the subject name (e.g. correct a misspelling).\n` +
+            `This only changes the name — results and class levels are kept.`,
+            subject.name,
+        );
+        if (newName === null) return;
+        const trimmed = newName.trim();
+        if (!trimmed || trimmed === subject.name) return;
+        setLoading(true);
+        try {
+            await subjectsAPI.rename(subject.id, { name: trimmed });
+            await fetchAllData();
+            setSuccess(` Renamed to "${trimmed}".`);
+        } catch (err) {
+            const d = err.response?.data;
+            // Field errors come back as { name: [...] } / { code: [...] }.
+            const msg =
+                d?.name?.join?.(" ") ||
+                d?.code?.join?.(" ") ||
+                d?.error ||
+                d?.detail ||
+                err.message;
+            setError("Rename failed: " + msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSetActive = async (id, type) => {
         setLoading(true);
         try {
@@ -577,7 +606,14 @@ export function AcademicSetup() {
                                     <div className="text-xs text-gray-600 mt-1">
                                         Code: {subject.code}
                                     </div>
-                                    <div className="flex gap-2 mt-2">
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        <button
+                                            onClick={() => handleRenameSubject(subject)}
+                                            className="text-xs px-2 py-1 rounded bg-white border border-blue-300 text-blue-700 hover:bg-blue-50"
+                                            title="Fix a misspelled name (keeps results and class levels)"
+                                        >
+                                            Rename
+                                        </button>
                                         <button
                                             onClick={() => handleMergeSubject(subject.id)}
                                             className="text-xs px-2 py-1 rounded bg-white border border-purple-300 text-purple-700 hover:bg-purple-100"

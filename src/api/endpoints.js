@@ -462,6 +462,12 @@ export const subjectsAPI = {
     invalidatePrefix("/api/exam-results");
     return api.post(`/api/subjects/${id}/merge-into/`, { target_id: targetId });
   },
+  // Fix a name/code (e.g. a misspelling) in place — partial update, so it
+  // does not touch the subject's class levels or its results.
+  rename: (id, data) => {
+    invalidatePrefix("/api/subjects");
+    return api.patch(`/api/subjects/${id}/`, data);
+  },
 };
 
 // ============================================
