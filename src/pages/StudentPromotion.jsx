@@ -24,6 +24,7 @@ export function StudentPromotion() {
     const [promoting, setPromoting] = useState(false);
     const [alert, setAlert] = useState(null);
     const [sessions, setSessions] = useState([]);
+    const [targetSessionId, setTargetSessionId] = useState('');
     const [classLevels, setClassLevels] = useState([]);
     const [students, setStudents] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState([]);
@@ -50,6 +51,13 @@ export function StudentPromotion() {
             const currentSession = sessionList.find(s => s.is_current || s.is_active);
             if (currentSession) {
                 setFilters(prev => ({ ...prev, sessionId: currentSession.id.toString() }));
+                // Default "promote into" to the next session by start date (so a
+                // promoted class becomes a separate cohort next session). If there
+                // is no later session yet, fall back to the current one.
+                const sorted = [...sessionList].sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+                const idx = sorted.findIndex(s => s.id === currentSession.id);
+                const next = (idx >= 0 && idx < sorted.length - 1) ? sorted[idx + 1] : currentSession;
+                setTargetSessionId(next.id.toString());
             }
         } catch (error) {
 
@@ -168,7 +176,8 @@ export function StudentPromotion() {
                 student_ids: selectedStudents,
                 from_class: currentClass?.name,
                 to_class: nextClass,
-                session_id: parseInt(filters.sessionId)
+                session_id: parseInt(filters.sessionId),
+                target_session_id: targetSessionId ? parseInt(targetSessionId) : parseInt(filters.sessionId)
             });
             setAlert({
                 type: 'success',
@@ -225,7 +234,7 @@ export function StudentPromotion() {
             {/* Filters */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-4"> Select Class & Session</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Session</label>
                         <select value={filters.sessionId} onChange={(e) => setFilters(prev => ({ ...prev, sessionId: e.target.value }))}
@@ -245,6 +254,17 @@ export function StudentPromotion() {
                                 <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
                         </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Promote into session</label>
+                        <select value={targetSessionId} onChange={(e) => setTargetSessionId(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                            <option value="">Select Session</option>
+                            {sessions.map(s => (
+                                <option key={s.id} value={s.id}>{s.name} {s.is_current ? '(Current)' : ''}</option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">Promoted students become the next class in this session.</p>
                     </div>
                     <div className="flex items-end">
                         <Button variant="primary" onClick={loadPromotionData} loading={loading} className="w-full">
