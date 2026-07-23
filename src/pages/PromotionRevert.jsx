@@ -32,7 +32,10 @@ function parseAdmissionNumbers(text) {
 }
 
 export function PromotionRevert() {
-    const [mode, setMode] = useState('roster'); // 'roster' | 'recent'
+    const [mode, setMode] = useState('roster'); // 'roster' | 'recent' | 'history'
+    const [events, setEvents] = useState([]);
+    const [loadingEvents, setLoadingEvents] = useState(false);
+    const [undoingId, setUndoingId] = useState(null);
     const [classLevels, setClassLevels] = useState([]);
     const [loading, setLoading] = useState(false);
     const [reverting, setReverting] = useState(false);
@@ -146,7 +149,35 @@ export function PromotionRevert() {
         }
     };
 
-    const switchMode = (m) => { setMode(m); setAlert(null); reset(); setFileName(''); };
+    const loadEvents = async () => {
+        setLoadingEvents(true); setAlert(null);
+        try {
+            const res = await api.get('/api/users/promotion/events/');
+            setEvents(res.data.events || []);
+        } catch (err) {
+            setAlert({ type: 'error', msg: err.response?.data?.error || 'Could not load promotion history.' });
+        } finally {
+            setLoadingEvents(false);
+        }
+    };
+
+    const undoEvent = async (id) => {
+        setUndoingId(id);
+        try {
+            const res = await api.post('/api/users/promotion/undo-event/', { event_id: id });
+            setAlert({ type: 'success', msg: `Undone — ${res.data.reverted} student(s) moved back to ${res.data.from_class}.` });
+            await loadEvents();
+        } catch (err) {
+            setAlert({ type: 'error', msg: err.response?.data?.error || 'Undo failed.' });
+        } finally {
+            setUndoingId(null);
+        }
+    };
+
+    const switchMode = (m) => {
+        setMode(m); setAlert(null); reset(); setFileName('');
+        if (m === 'history') loadEvents();
+    };
 
     return (
         <div className="p-6 max-w-5xl mx-auto">
@@ -171,6 +202,12 @@ export function PromotionRevert() {
                     }`}>
                     By recent activity
                 </button>
+                <button onClick={() => switchMode('history')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+                        mode === 'history' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'
+                    }`}>
+                    Promotion history (one-click undo)
+                </button>
             </div>
 
             {alert && (
@@ -179,7 +216,55 @@ export function PromotionRevert() {
                 }`}>{alert.msg}</div>
             )}
 
-            {mode === 'roster' ? (
+            {mode === 'history' ? (
+                <div className="bg-white rounded-2xl shadow p-5">
+                    <p className="text-sm text-gray-600 mb-4">
+                        Every promotion is logged here. Press <strong>Undo</strong> to reverse one
+                        exactly — the same students go back to their previous class and session.
+                    </p>
+                    {loadingEvents ? (
+                        <p className="text-sm text-gray-500">Loading…</p>
+                    ) : events.length === 0 ? (
+                        <p className="text-gray-500 py-6 text-center">No promotions recorded yet.</p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-200 text-left text-gray-500">
+                                        <th className="py-2 px-3">When</th>
+                                        <th className="py-2 px-3">Move</th>
+                                        <th className="py-2 px-3">Into session</th>
+                                        <th className="py-2 px-3">Students</th>
+                                        <th className="py-2 px-3">By</th>
+                                        <th className="py-2 px-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {events.map((ev) => (
+                                        <tr key={ev.id} className={ev.is_undone ? 'text-gray-400' : ''}>
+                                            <td className="py-2 px-3">{ev.performed_at ? new Date(ev.performed_at).toLocaleString() : '—'}</td>
+                                            <td className="py-2 px-3 font-medium">{ev.from_class} → {ev.to_class}</td>
+                                            <td className="py-2 px-3">{ev.target_session || '—'}</td>
+                                            <td className="py-2 px-3">{ev.count}</td>
+                                            <td className="py-2 px-3">{ev.performed_by || '—'}</td>
+                                            <td className="py-2 px-3 text-right">
+                                                {ev.is_undone ? (
+                                                    <span className="text-xs italic">undone</span>
+                                                ) : (
+                                                    <button onClick={() => undoEvent(ev.id)} disabled={undoingId === ev.id}
+                                                        className="text-xs px-3 py-1 rounded bg-white border border-red-300 text-red-700 hover:bg-red-50">
+                                                        {undoingId === ev.id ? 'Undoing…' : 'Undo'}
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            ) : mode === 'roster' ? (
                 <div className="bg-white rounded-2xl shadow p-5 mb-6">
                     <p className="text-sm text-gray-600 mb-4">
                         Upload the authoritative roster for a class (the CSV of who <em>should</em> be
