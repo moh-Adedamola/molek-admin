@@ -188,6 +188,24 @@ export function BehavioralManager() {
                         <div className="p-3 bg-blue-50 rounded-lg"><div className="text-xs text-blue-600">Updated</div><div className="text-xl font-bold text-blue-700">{uploadResult.updated}</div></div>
                         <div className="p-3 bg-red-50 rounded-lg"><div className="text-xs text-red-600">Not Found</div><div className="text-xl font-bold text-red-700">{uploadResult.not_found?.length || 0}</div></div>
                     </div>
+                    {uploadResult.not_found?.length > 0 && (
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs mt-3">
+                            <div className="font-semibold text-amber-900 mb-1">
+                                Not found in the system ({uploadResult.not_found.length}) — these rows were skipped:
+                            </div>
+                            <p className="text-amber-800 mb-2">
+                                These admission numbers are not in the system, so their behavioral scores
+                                were NOT saved and will not show on the student portal. Check for typos or
+                                spacing, and that the student exists and is active.
+                            </p>
+                            <ul className="text-amber-900 list-disc list-inside max-h-40 overflow-y-auto font-mono">
+                                {uploadResult.not_found.slice(0, 50).map((a, i) => <li key={i}>{a}</li>)}
+                            </ul>
+                            {uploadResult.not_found.length > 50 && (
+                                <p className="text-amber-800 mt-1">…and {uploadResult.not_found.length - 50} more.</p>
+                            )}
+                        </div>
+                    )}
                     {uploadResult.errors?.length > 0 && (
                         <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs mt-3">
                             <div className="font-semibold text-red-800 mb-1">Errors ({uploadResult.errors.length}):</div>

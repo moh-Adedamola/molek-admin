@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/useAuth"
 import {
     LayoutDashboard, Users, GraduationCap, ArrowUpCircle, Settings,
     Upload, ClipboardList, Film, Newspaper, Image, ChevronDown, ChevronRight, Menu, X,
-    Wallet, HeartHandshake, CalendarDays, Calendar, Table2, Undo2
+    Wallet, HeartHandshake, CalendarDays, Calendar, Table2, Undo2, History
 } from "lucide-react"
 
 const navGroups = [
@@ -20,7 +20,8 @@ const navGroups = [
             { path: "/admins", label: "Admins", icon: Users },
             { path: "/students", label: "Students", icon: GraduationCap },
             { path: "/students/promote", label: "Promotion", icon: ArrowUpCircle },
-            { path: "/students/revert", label: "Revert Promotion", icon: Undo2 },
+            { path: "/students/revert", label: "Promotion History", icon: Undo2 },
+            { path: "/students/results-history", label: "Results History", icon: History },
             { path: "/fees", label: "Fees", icon: Wallet },
         ]
     },
