@@ -28,6 +28,10 @@ export function StudentPromotion() {
     const [classLevels, setClassLevels] = useState([]);
     const [students, setStudents] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState([]);
+    // Students explicitly held back. Kept separate from selectedStudents and
+    // mutually exclusive with it — never derived from "not selected", because
+    // an unselected student may simply not have been decided on yet.
+    const [retainedStudents, setRetainedStudents] = useState([]);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [promotionStats, setPromotionStats] = useState(null);
     const [rulesApplied, setRulesApplied] = useState(null);
@@ -91,6 +95,7 @@ export function StudentPromotion() {
             setLoading(true);
             setStudents([]);
             setSelectedStudents([]);
+            setRetainedStudents([]);
             setPromotionStats(null);
             setRulesApplied(null);
 
@@ -111,6 +116,15 @@ export function StudentPromotion() {
                     .filter(s => s.promotion_status === 'Promoted' || s.promotion_status === 'Promoted with Carryover')
                     .map(s => s.student_id);
                 setSelectedStudents(promoted);
+
+                // Pre-fill Repeat with students the rules flagged Not Promoted.
+                // Incomplete / No Data are excluded on purpose: those students
+                // cannot be assessed yet, so stamping them would be a guess.
+                setRetainedStudents(
+                    data.students
+                        .filter(s => s.promotion_status === 'Not Promoted')
+                        .map(s => s.student_id)
+                );
             }
         } catch (error) {
             // Fallback: load students without promotion analysis
@@ -147,6 +161,24 @@ export function StudentPromotion() {
         setSelectedStudents(prev =>
             prev.includes(studentId) ? prev.filter(id => id !== studentId) : [...prev, studentId]
         );
+        // A student cannot be promoted and retained at once. The API rejects
+        // that with a 400; this stops it before the request is built.
+        setRetainedStudents(prev => prev.filter(id => id !== studentId));
+    };
+
+    const toggleRetained = (studentId) => {
+        setRetainedStudents(prev =>
+            prev.includes(studentId) ? prev.filter(id => id !== studentId) : [...prev, studentId]
+        );
+        setSelectedStudents(prev => prev.filter(id => id !== studentId));
+    };
+
+    const retainNotPromoted = () => {
+        const ids = students
+            .filter(s => s.promotion_status === 'Not Promoted')
+            .map(s => s.student_id);
+        setRetainedStudents(ids);
+        setSelectedStudents(prev => prev.filter(id => !ids.includes(id)));
     };
 
     const selectAll = () => setSelectedStudents(students.map(s => s.student_id));
@@ -164,8 +196,8 @@ export function StudentPromotion() {
     };
 
     const handlePromote = async () => {
-        if (selectedStudents.length === 0) {
-            setAlert({ type: 'error', message: 'Please select at least one student' });
+        if (selectedStudents.length === 0 && retainedStudents.length === 0) {
+            setAlert({ type: 'error', message: 'Select at least one student to promote or mark as repeating' });
             return;
         }
         const currentClass = classLevels.find(c => c.id.toString() === filters.classLevel);
@@ -174,6 +206,7 @@ export function StudentPromotion() {
             setPromoting(true);
             const res = await studentsAPI.promoteStudents({
                 student_ids: selectedStudents,
+                retained_ids: retainedStudents,
                 from_class: currentClass?.name,
                 to_class: nextClass,
                 session_id: parseInt(filters.sessionId),
@@ -185,6 +218,7 @@ export function StudentPromotion() {
             });
             setIsConfirmOpen(false);
             setSelectedStudents([]);
+            setRetainedStudents([]);
             loadPromotionData();
         } catch (error) {
             setAlert({ type: 'error', message: error.response?.data?.error || 'Promotion failed' });
@@ -357,6 +391,7 @@ export function StudentPromotion() {
                             <Button variant="outline" size="sm" onClick={selectAll}>All</Button>
                             <Button variant="outline" size="sm" onClick={selectPromoted}>Promoted Only</Button>
                             <Button variant="outline" size="sm" onClick={selectNone}>None</Button>
+                            <Button variant="outline" size="sm" onClick={retainNotPromoted}>Repeat: Not Promoted</Button>
                         </div>
                     </div>
 
@@ -365,6 +400,7 @@ export function StudentPromotion() {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase">Select</th>
+                                    <th className="px-3 py-3 text-left text-xs font-bold text-amber-700 uppercase">Repeat</th>
                                     <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase">Adm No.</th>
                                     <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase">Name</th>
                                     <th className="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase">Avg</th>
@@ -379,13 +415,20 @@ export function StudentPromotion() {
                                     <>
                                         <tr key={student.student_id}
                                             className={`hover:bg-gray-50 ${
-                                                selectedStudents.includes(student.student_id) ? 'bg-blue-50' : ''
+                                                selectedStudents.includes(student.student_id) ? 'bg-blue-50'
+                                                : retainedStudents.includes(student.student_id) ? 'bg-amber-50' : ''
                                             }`}>
                                             <td className="px-3 py-3">
                                                 <input type="checkbox"
                                                     checked={selectedStudents.includes(student.student_id)}
                                                     onChange={() => toggleStudent(student.student_id)}
                                                     className="h-4 w-4 text-blue-600 rounded border-gray-300" />
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                <input type="checkbox"
+                                                    checked={retainedStudents.includes(student.student_id)}
+                                                    onChange={() => toggleRetained(student.student_id)}
+                                                    className="h-4 w-4 text-amber-600 rounded border-gray-300" />
                                             </td>
                                             <td className="px-3 py-3 font-mono text-sm text-gray-900">
                                                 {student.admission_number}
@@ -422,7 +465,7 @@ export function StudentPromotion() {
                                         {/* Expanded Subject Details */}
                                         {expandedStudent === student.student_id && student.subject_details?.length > 0 && (
                                             <tr key={`${student.student_id}-details`}>
-                                                <td colSpan="8" className="px-3 py-3 bg-gray-50">
+                                                <td colSpan="9" className="px-3 py-3 bg-gray-50">
                                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                                                         {student.subject_details.map((subj, i) => (
                                                             <div key={i} className={`flex items-center gap-2 p-2 rounded-lg text-sm ${
@@ -458,10 +501,15 @@ export function StudentPromotion() {
                     {/* Promote Button */}
                     <div className="mt-6 flex items-center justify-between border-t-2 border-gray-200 pt-4">
                         <div className="text-sm text-gray-600">
-                             Selected: <strong>{selectedStudents.length}</strong> of {students.length} students
+                            Selected: <strong>{selectedStudents.length}</strong> of {students.length} students
+                            {retainedStudents.length > 0 && (
+                                <span className="ml-3 text-amber-700">
+                                    Repeating: <strong>{retainedStudents.length}</strong>
+                                </span>
+                            )}
                         </div>
                         <Button variant="primary" onClick={() => setIsConfirmOpen(true)}
-                            disabled={selectedStudents.length === 0 || promoting}>
+                            disabled={(selectedStudents.length === 0 && retainedStudents.length === 0) || promoting}>
                             {nextClass === 'GRADUATED'
                                 ? <> Graduate Selected ({selectedStudents.length})</>
                                 : <> Promote Selected ({selectedStudents.length}) to {nextClass}</>
@@ -498,6 +546,26 @@ export function StudentPromotion() {
                             : `Promote ${selectedStudents.length} student(s) from ${currentClassName} to ${nextClass}?`
                         }
                     </p>
+                    {retainedStudents.length > 0 && (
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <p className="text-sm font-semibold text-amber-900 mb-2">
+                                {retainedStudents.length} student(s) will be recorded as REPEATING {currentClassName}.
+                            </p>
+                            <p className="text-xs text-amber-800 mb-2">
+                                This is shown to the student and their parent on the results page.
+                                Please check the names.
+                            </p>
+                            <ul className="text-sm text-amber-900 max-h-40 overflow-y-auto list-disc list-inside">
+                                {students
+                                    .filter(s => retainedStudents.includes(s.student_id))
+                                    .map(s => (
+                                        <li key={s.student_id}>
+                                            {s.full_name} <span className="text-xs text-amber-700">({s.admission_number})</span>
+                                        </li>
+                                    ))}
+                            </ul>
+                        </div>
+                    )}
                     {rulesApplied?.mode === 'recommend' && (
                         <div className="p-3 bg-yellow-50 rounded-lg text-sm text-yellow-800">
                              Mode: Recommend — you are overriding system recommendations for manually selected students.
