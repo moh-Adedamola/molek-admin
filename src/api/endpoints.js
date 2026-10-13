@@ -42,10 +42,23 @@ function setCache(key, data, ttl) {
   cache.set(key, { data, time: Date.now(), ttl });
 }
 
+// Any change to scores must also drop the cached broadsheet, or a broadsheet
+// printed straight after a correction shows the old numbers for 2 minutes.
+const SCORE_PREFIXES = ["/api/exam-results", "/api/ca-scores", "/api/users/exam-results"];
+
 function invalidatePrefix(prefix) {
+  const prefixes = SCORE_PREFIXES.some((p) => prefix.startsWith(p))
+    ? [prefix, "/api/users/broadsheet"]
+    : [prefix];
   for (const key of cache.keys()) {
-    if (key.startsWith(prefix)) cache.delete(key);
+    if (prefixes.some((p) => key.startsWith(p))) cache.delete(key);
   }
+}
+
+// For uploads that bypass this client (e.g. the unified upload uses fetch).
+export function invalidateScoreCaches() {
+  invalidatePrefix("/api/exam-results");
+  invalidatePrefix("/api/ca-scores");
 }
 
 function invalidateAll() {
@@ -325,6 +338,11 @@ export const studentsAPI = {
         : { "Content-Type": "application/json" },
     });
   },
+  // Admin-only: gives the student a new starting password, returned once.
+  resetPassword: (id) => {
+    invalidatePrefix("/api/students");
+    return api.post(`/api/students/${id}/reset-password/`);
+  },
   delete: (id) => {
     invalidatePrefix("/api/students");
     return api.delete(`/api/students/${id}/`);
@@ -532,14 +550,6 @@ export const examResultsAPI = {
     return api.delete(`/api/exam-results/${id}/`);
   },
 
-  bulkUpload: (formData, config = {}) => {
-    invalidatePrefix("/api/exam-results");
-    invalidatePrefix("/api/users/exam-results");
-    return api.post("/api/users/exam-results/bulk-upload/", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-      ...config,
-    });
-  },
 
   importObjScores: (formData, config = {}) => {
     invalidatePrefix("/api/exam-results");

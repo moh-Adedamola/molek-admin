@@ -70,6 +70,8 @@ export function ExamResultsManager() {
         e.preventDefault();
         const total = calcTotal(newResult.ca1_score, newResult.ca2_score, newResult.obj_score, newResult.theory_score);
         if (total > 100) { setMessage({ type: 'error', text: `Total score (${total}) exceeds 100.` }); return; }
+        const examTotal = (parseFloat(newResult.obj_score) || 0) + (parseFloat(newResult.theory_score) || 0);
+        if (examTotal > 70) { setMessage({ type: 'error', text: `OBJ + Theory is ${examTotal}; together they can be at most 70.` }); return; }
         setLoading(true);
         try {
             await examResultsAPI.create({
@@ -90,6 +92,8 @@ export function ExamResultsManager() {
         e.preventDefault();
         const total = calcTotal(editingResult.ca1_score, editingResult.ca2_score, editingResult.obj_score, editingResult.theory_score);
         if (total > 100) { setMessage({ type: 'error', text: `Total score (${total}) exceeds 100.` }); return; }
+        const examTotal = (parseFloat(editingResult.obj_score) || 0) + (parseFloat(editingResult.theory_score) || 0);
+        if (examTotal > 70) { setMessage({ type: 'error', text: `OBJ + Theory is ${examTotal}; together they can be at most 70.` }); return; }
         setLoading(true);
         try {
             await examResultsAPI.update(editingResult.id, {
@@ -344,8 +348,8 @@ export function ExamResultsManager() {
                         <div className="grid grid-cols-4 gap-3">
                             <ScoreInput label="CA1 (max 15)" max={15} value={newResult.ca1_score} onChange={(e) => setNewResult({ ...newResult, ca1_score: e.target.value })} />
                             <ScoreInput label="CA2 (max 15)" max={15} value={newResult.ca2_score} onChange={(e) => setNewResult({ ...newResult, ca2_score: e.target.value })} />
-                            <ScoreInput label="OBJ (max 70)" max={70} value={newResult.obj_score} onChange={(e) => setNewResult({ ...newResult, obj_score: e.target.value })} />
-                            <ScoreInput label="Theory (max 70)" max={70} value={newResult.theory_score} onChange={(e) => setNewResult({ ...newResult, theory_score: e.target.value })} />
+                            <ScoreInput label="OBJ (OBJ + Theory ≤ 70)" max={70} value={newResult.obj_score} onChange={(e) => setNewResult({ ...newResult, obj_score: e.target.value })} />
+                            <ScoreInput label="Theory (OBJ + Theory ≤ 70)" max={70} value={newResult.theory_score} onChange={(e) => setNewResult({ ...newResult, theory_score: e.target.value })} />
                         </div>
                         <div className="bg-gray-50 p-3 rounded-lg text-sm">
                             <span className="font-medium">Total:</span> {calcTotal(newResult.ca1_score, newResult.ca2_score, newResult.obj_score, newResult.theory_score)} / 100
@@ -369,8 +373,8 @@ export function ExamResultsManager() {
                         <div className="grid grid-cols-4 gap-3">
                             <ScoreInput label="CA1 (max 15)" max={15} value={editingResult.ca1_score} onChange={(e) => setEditingResult({ ...editingResult, ca1_score: e.target.value })} />
                             <ScoreInput label="CA2 (max 15)" max={15} value={editingResult.ca2_score} onChange={(e) => setEditingResult({ ...editingResult, ca2_score: e.target.value })} />
-                            <ScoreInput label="OBJ (max 70)" max={70} value={editingResult.obj_score} onChange={(e) => setEditingResult({ ...editingResult, obj_score: e.target.value })} />
-                            <ScoreInput label="Theory (max 70)" max={70} value={editingResult.theory_score} onChange={(e) => setEditingResult({ ...editingResult, theory_score: e.target.value })} />
+                            <ScoreInput label="OBJ (OBJ + Theory ≤ 70)" max={70} value={editingResult.obj_score} onChange={(e) => setEditingResult({ ...editingResult, obj_score: e.target.value })} />
+                            <ScoreInput label="Theory (OBJ + Theory ≤ 70)" max={70} value={editingResult.theory_score} onChange={(e) => setEditingResult({ ...editingResult, theory_score: e.target.value })} />
                         </div>
                         <div className="bg-gray-50 p-3 rounded-lg text-sm">
                             <span className="font-medium">New total:</span> {calcTotal(editingResult.ca1_score, editingResult.ca2_score, editingResult.obj_score, editingResult.theory_score)} / 100

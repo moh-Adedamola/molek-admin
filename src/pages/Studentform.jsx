@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { studentsAPI, classLevelsAPI, academicSessionsAPI, subjectsAPI } from "../api/endpoints";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
+import { Modal } from "../components/ui/Modal";
 
 export function StudentForm() {
     const navigate = useNavigate();
@@ -15,6 +16,7 @@ export function StudentForm() {
     const [subjects, setSubjects] = useState([]);
     const [currentPassport, setCurrentPassport] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [createdCredentials, setCreatedCredentials] = useState(null);
 
     const [formData, setFormData] = useState({
         // Student Info
@@ -239,7 +241,12 @@ export function StudentForm() {
             }
 
             if (mode === "create") {
-                await studentsAPI.create(submitData);
+                const res = await studentsAPI.create(submitData);
+                // Show the starting password once before leaving the page.
+                if (res?.data?.password) {
+                    setCreatedCredentials({ admission_number: res.data.admission_number, password: res.data.password });
+                    return;
+                }
             } else {
                 await studentsAPI.update(id, submitData);
             }
@@ -260,6 +267,16 @@ export function StudentForm() {
 
     return (
         <div className="max-w-5xl mx-auto">
+            <Modal isOpen={!!createdCredentials} title="Student created" onClose={() => navigate("/students")}
+                actions={[{ label: "Done", onClick: () => navigate("/students") }]}>
+                <div className="space-y-3">
+                    <p className="text-gray-600">Give these to the student or parent. The password is shown only once; they should change it after signing in.</p>
+                    <div className="rounded-lg bg-gray-50 p-4 font-mono text-lg">
+                        <div>{createdCredentials?.admission_number}</div>
+                        <div className="font-bold">{createdCredentials?.password}</div>
+                    </div>
+                </div>
+            </Modal>
             <h1 className="text-3xl font-bold text-gray-900 mb-8">
                 {mode === "create" ? "Add New Student" : "Edit Student"}
             </h1>

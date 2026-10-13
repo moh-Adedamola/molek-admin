@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { academicSessionsAPI, termsAPI, classLevelsAPI, studentsAPI } from '../api/endpoints';
+import { academicSessionsAPI, termsAPI, classLevelsAPI, studentsAPI, invalidateScoreCaches } from '../api/endpoints';
 import { Upload, Download, FileText, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 export function UnifiedScoreUpload() {
@@ -72,6 +72,7 @@ export function UnifiedScoreUpload() {
 
             const data = await response.json();
             if (response.ok) {
+                invalidateScoreCaches();
                 setResult(data);
                 setFile(null);
                 const input = document.getElementById('csv-upload-input');
@@ -143,7 +144,7 @@ export function UnifiedScoreUpload() {
         <div className="max-w-3xl mx-auto space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Upload Scores</h1>
-                <p className="text-sm text-gray-500 mt-1">Upload all scores (CA1, CA2, OBJ, Theory) in a single CSV file</p>
+                <p className="text-sm text-gray-500 mt-1">Upload all scores (CA1 15, CA2 15, OBJ + Theory 70 combined) in a single CSV file</p>
             </div>
 
             {alert && <AlertBanner {...alert} onClose={() => setAlert(null)} />}
@@ -260,7 +261,7 @@ export function UnifiedScoreUpload() {
                     <li>2. Fill in the <strong>subject</strong> name and scores for each student</li>
                     <li>3. For multiple subjects, copy each student's row and change the subject</li>
                     <li>4. CA columns can be left blank for SS3 students</li>
-                    <li>5. The total (CA1 + CA2 + OBJ + Theory) must not exceed 100</li>
+                    <li>5. CA1 and CA2 are out of 15 each; OBJ + Theory together must not exceed 70; the total must not exceed 100</li>
                     <li>6. Grades, positions, and cumulative scores are calculated automatically</li>
                 </ul>
             </div>

@@ -242,6 +242,7 @@ export function BehavioralManager() {
                                     <th className="px-3 py-2 text-center bg-blue-50" title="Times school opened this term">Days Open</th>
                                     <th className="px-3 py-2 text-center bg-blue-50" title="Times student was present">Present</th>
                                     <th className="px-3 py-2 text-center bg-blue-50" title="Public holidays">Hol</th>
+                                    <th className="px-3 py-2 text-left min-w-[14rem]" title="Class teacher's comment (from the CSV), shown on the report card">Teacher comment</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -255,6 +256,11 @@ export function BehavioralManager() {
                                         <td className="px-3 py-2 text-center text-gray-700 bg-blue-50/30">{a.times_school_opened ?? '—'}</td>
                                         <td className="px-3 py-2 text-center text-gray-700 bg-blue-50/30">{a.times_present ?? '—'}</td>
                                         <td className="px-3 py-2 text-center text-gray-700 bg-blue-50/30">{a.public_holidays ?? '—'}</td>
+                                        <td className="px-3 py-2 text-left text-gray-700 max-w-xs">
+                                            {a.class_teacher_comment
+                                                ? <span className="line-clamp-2" title={a.class_teacher_comment}>{a.class_teacher_comment}</span>
+                                                : <span className="text-amber-700 text-xs font-medium">Missing: report card will say "Not yet available"</span>}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

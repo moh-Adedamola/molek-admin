@@ -1,6 +1,6 @@
 /**
- * Exam Results Import - OBJ/CBT (30 marks) and Theory (40 marks)
- * Nigerian School Format: CA1(15) + CA2(15) + OBJ(30) + Theory(40) = 100
+ * Exam Results Import - OBJ/CBT and Theory scores
+ * MOLEK rule: CA1 (15) + CA2 (15) + exam (OBJ + Theory, 70 combined) = 100
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -129,7 +129,7 @@ export function ExamResultsImport() {
                 }
                 csv += '# NOTE: student_name is for reference only (ignored during upload)\n';
                 csv += '# Fill in subject name for each row. Duplicate rows for multiple subjects\n';
-                csv += '# obj_score max = 30\n';
+                csv += '# obj_score + theory_score must not exceed 70 combined\n';
             } else {
                 csv += 'admission_number,student_name,subject,theory_score\n';
                 for (const student of studentsList) {
@@ -138,7 +138,7 @@ export function ExamResultsImport() {
                 }
                 csv += '# NOTE: student_name is for reference only (ignored during upload)\n';
                 csv += '# Fill in subject name for each row. Duplicate rows for multiple subjects\n';
-                csv += '# theory_score max = 40\n';
+                csv += '# obj_score + theory_score must not exceed 70 combined\n';
             }
 
             const className = classLevels.find(c => c.id === parseInt(templateClass))?.name || 'class';
@@ -158,7 +158,7 @@ export function ExamResultsImport() {
     return (
         <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Import Exam Results</h1>
-            <p className="text-gray-600 mb-6">Import OBJ/CBT (30 marks) or Theory (40 marks) scores</p>
+            <p className="text-gray-600 mb-6">Import OBJ/CBT or Theory scores. OBJ + Theory together: 70 marks maximum.</p>
 
             {/* Score Structure */}
             <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200 mb-6">
@@ -166,8 +166,8 @@ export function ExamResultsImport() {
                 <div className="grid grid-cols-4 gap-2 text-sm text-center">
                     <div className="bg-white/50 p-2 rounded"><strong>CA1</strong><br/>15</div>
                     <div className="bg-white/50 p-2 rounded"><strong>CA2</strong><br/>15</div>
-                    <div className={`bg-white/50 p-2 rounded ${activeTab === 'obj' ? 'border-2 border-blue-500' : ''}`}><strong>OBJ</strong><br/>30</div>
-                    <div className={`bg-white/50 p-2 rounded ${activeTab === 'theory' ? 'border-2 border-purple-500' : ''}`}><strong>Theory</strong><br/>40</div>
+                    <div className={`bg-white/50 p-2 rounded ${activeTab === 'obj' ? 'border-2 border-blue-500' : ''}`}><strong>OBJ</strong><br/>with Theory ≤ 70</div>
+                    <div className={`bg-white/50 p-2 rounded ${activeTab === 'theory' ? 'border-2 border-purple-500' : ''}`}><strong>Theory</strong><br/>with OBJ ≤ 70</div>
                 </div>
             </div>
 
@@ -179,11 +179,11 @@ export function ExamResultsImport() {
                 <div className="flex border-b border-gray-200">
                     <button onClick={() => { setActiveTab('obj'); setFile(null); setError(''); setSuccess(''); setUploadResults(null); }}
                         className={`flex-1 py-4 px-6 font-semibold ${activeTab === 'obj' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                         OBJ/CBT Import (30)
+                         OBJ/CBT Import
                     </button>
                     <button onClick={() => { setActiveTab('theory'); setFile(null); setError(''); setSuccess(''); setUploadResults(null); }}
                         className={`flex-1 py-4 px-6 font-semibold ${activeTab === 'theory' ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                         Theory Import (40)
+                         Theory Import
                     </button>
                 </div>
 

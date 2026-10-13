@@ -18,6 +18,7 @@ export function StudentsList() {
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, studentId: null });
     const [bulkDeleteModal, setBulkDeleteModal] = useState({ isOpen: false, permanent: false });
     const [activateModal, setActivateModal] = useState({ isOpen: false, action: 'activate' });
+    const [resetModal, setResetModal] = useState({ isOpen: false, student: null, credentials: null, busy: false });
     const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
@@ -58,6 +59,18 @@ export function StudentsList() {
         try { const response = await studentsAPI.stats(); setStats(response.data); }
         catch (error) { console.error("Failed to fetch stats:", error); }
     };
+
+    const handleResetPassword = async () => {
+        setResetModal((m) => ({ ...m, busy: true }));
+        try {
+            const res = await studentsAPI.resetPassword(resetModal.student.id);
+            setResetModal((m) => ({ ...m, busy: false, credentials: res.data }));
+        } catch (err) {
+            setResetModal({ isOpen: false, student: null, credentials: null, busy: false });
+            setMessage({ type: 'error', text: err.response?.data?.detail || 'Could not reset the password. Please try again.' });
+        }
+    };
+    const closeResetModal = () => setResetModal({ isOpen: false, student: null, credentials: null, busy: false });
 
     const handleDelete = async () => {
         try {
@@ -154,9 +167,10 @@ export function StudentsList() {
         { key: "gender", label: "Gender", render: (value) => value === 'M' ? 'Male' : 'Female' },
         { key: "date_of_birth", label: "Date of Birth", render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A' },
         { key: "is_active", label: "Status", render: (value) => (<span className={`rounded-full px-3 py-1 text-sm font-semibold ${value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{value ? 'Active' : 'Inactive'}</span>) },
-        { key: "id", label: "Actions", render: (value) => (
+        { key: "id", label: "Actions", render: (value, row) => (
             <div className="flex gap-2">
                 <Button size="sm" onClick={() => navigate(`/students/${value}/edit`)}>Edit</Button>
+                <Button size="sm" variant="secondary" onClick={() => setResetModal({ isOpen: true, student: row, credentials: null, busy: false })}>Reset password</Button>
                 <Button size="sm" variant="danger" onClick={() => setDeleteModal({ isOpen: true, studentId: value })}>Delete</Button>
             </div>
         )},
@@ -235,6 +249,33 @@ export function StudentsList() {
                     </div>
                 </div>
             )}
+
+            <Modal isOpen={resetModal.isOpen}
+                title={resetModal.credentials ? "New password" : "Reset password?"}
+                onClose={closeResetModal}
+                actions={resetModal.credentials
+                    ? [{ label: "Done", onClick: closeResetModal }]
+                    : [{ label: "Cancel", onClick: closeResetModal },
+                       { label: resetModal.busy ? "Resetting..." : "Reset password", variant: "danger", onClick: resetModal.busy ? undefined : handleResetPassword }]}>
+                {resetModal.credentials ? (
+                    <div className="space-y-3">
+                        <p className="text-gray-600">Give these to the student or parent. This password is shown only once; they should change it after signing in.</p>
+                        <div className="rounded-lg bg-gray-50 p-4 font-mono text-lg">
+                            <div>{resetModal.credentials.admission_number}</div>
+                            <div className="font-bold">{resetModal.credentials.password}</div>
+                        </div>
+                        <button type="button" className="text-blue-600 hover:underline text-sm"
+                            onClick={() => navigator.clipboard?.writeText(`${resetModal.credentials.admission_number}  ${resetModal.credentials.password}`)}>
+                            Copy both
+                        </button>
+                    </div>
+                ) : (
+                    <p className="text-gray-600">
+                        {resetModal.student ? `${resetModal.student.first_name || ''} ${resetModal.student.last_name || ''} (${resetModal.student.admission_number}) ` : ''}
+                        will get a new password. Their old password stops working immediately.
+                    </p>
+                )}
+            </Modal>
 
             <Modal isOpen={deleteModal.isOpen} title="Delete Student?" onClose={() => setDeleteModal({ isOpen: false, studentId: null })}
                 actions={[{ label: "Cancel", onClick: () => setDeleteModal({ isOpen: false, studentId: null }) }, { label: "Delete", variant: "danger", onClick: handleDelete }]}>

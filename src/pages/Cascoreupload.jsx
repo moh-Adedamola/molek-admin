@@ -161,11 +161,8 @@ export function CAScoreUpload() {
                         <div className="bg-white/50 p-2 rounded text-center border-2 border-blue-400">
                             <div className="font-bold">CA2</div><div>15 marks</div>
                         </div>
-                        <div className="bg-white/50 p-2 rounded text-center">
-                            <div className="font-bold">OBJ/CBT</div><div>30 marks</div>
-                        </div>
-                        <div className="bg-white/50 p-2 rounded text-center">
-                            <div className="font-bold">Theory</div><div>40 marks</div>
+                        <div className="bg-white/50 p-2 rounded text-center col-span-2">
+                            <div className="font-bold">OBJ/CBT + Theory</div><div>70 marks combined</div>
                         </div>
                     </div>
                     <p className="text-xs text-blue-600 mt-2 text-center">Total = CA1 + CA2 + OBJ + Theory = 100 marks</p>
