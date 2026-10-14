@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  checks:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -24,5 +24,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Lint (no errors or warnings allowed)
+        run: npx eslint . --max-warnings 0
       - name: Production build (uses .env.production)
         run: npx vite build

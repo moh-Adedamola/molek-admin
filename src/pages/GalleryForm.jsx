@@ -121,7 +121,7 @@ export function GalleryForm() {
     setMediaError("");
 
     try {
-      const response = await galleriesAPI.create(formData);
+      await galleriesAPI.create(formData);
 
       clearInterval(uploadInterval);
       completeUpload();

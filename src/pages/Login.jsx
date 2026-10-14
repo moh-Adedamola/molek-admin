@@ -25,7 +25,7 @@ const handleAdminLogin = async (e) => {
   }
 
   try {
-    const response = await authAPI.login(formData.username, formData.password);
+    await authAPI.login(formData.username, formData.password);
     
     const profileResponse = await profileAPI.getCurrent();
     // Handle both array and single object response from Django

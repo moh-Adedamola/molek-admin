@@ -28,7 +28,7 @@ export function Profile() {
     try {
       await profileAPI.update(formData)
       alert("Profile updated successfully!")
-    } catch (error) {
+    } catch {
 
       alert("Failed to update profile")
     } finally {
@@ -51,7 +51,7 @@ export function Profile() {
       alert("Password changed successfully!")
       setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" })
       setShowPasswordModal(false)
-    } catch (error) {
+    } catch {
 
       alert("Failed to change password")
     } finally {

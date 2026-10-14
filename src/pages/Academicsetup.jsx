@@ -53,7 +53,8 @@ export function AcademicSetup() {
             setTerms(termsRes.data.results || termsRes.data || []);
             setClasses(classesRes.data.results || classesRes.data || []);
             setSubjects(subjectsRes.data.results || subjectsRes.data || []);
-        } catch (err) {
+        } catch {
+          setError("Could not load sessions, terms, classes and subjects. Check your connection and refresh the page.");
 
         }
     };
@@ -77,16 +78,20 @@ export function AcademicSetup() {
 
         try {
             let created = 0;
+            const failed = [];
             for (const classData of classLevelsData) {
                 try {
                     await classLevelsAPI.create(classData);
                     created++;
                 } catch (err) {
-                    // Skip if already exists
+                    // "Already exists" is fine; anything else is reported below.
                     if (!err.response?.data?.name?.includes("already exists")) {
-
+                        failed.push(classData.name);
                     }
                 }
+            }
+            if (failed.length) {
+                setError(`Could not create: ${failed.join(", ")}. Please try again.`);
             }
 
             await fetchAllData();

@@ -116,7 +116,7 @@ export function UnifiedScoreUpload() {
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
             const a = document.createElement('a'); a.href = window.URL.createObjectURL(blob);
             a.download = `scores_${className}.csv`; a.click();
-        } catch (error) {
+        } catch {
             setAlert({ type: 'error', message: 'Could not generate template.' });
         } finally { setDownloadingTemplate(false); }
     };

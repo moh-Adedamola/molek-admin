@@ -90,7 +90,7 @@ export function ExamResultsImport() {
                 setError(data.error || data.detail || "Import failed");
                 if (data.errors) setUploadResults({ errors: data.errors });
             }
-        } catch (err) { setError("Failed to import scores"); }
+        } catch { setError("Failed to import scores"); }
         finally { setLoading(false); }
     };
 
@@ -147,7 +147,7 @@ export function ExamResultsImport() {
             a.href = window.URL.createObjectURL(blob);
             a.download = `${type}_scores_${className}.csv`;
             a.click();
-        } catch (error) {
+        } catch {
 
             setError('Failed to generate template');
         } finally {

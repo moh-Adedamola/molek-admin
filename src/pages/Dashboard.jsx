@@ -28,7 +28,7 @@ export function Dashboard() {
                 galleries: galleriesRes.data.total || galleriesRes.data.total_galleries || 0,
                 news: contentRes.data.total_news || 0,
             });
-        } catch (error) {
+        } catch {
             // stats fetch failed
         } finally { setLoading(false); }
     };

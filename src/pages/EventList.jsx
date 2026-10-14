@@ -15,6 +15,7 @@ export function EventList() {
   const [previewModal, setPreviewModal] = useState({ isOpen: false, event: null })
   const [message, setMessage] = useState(null)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
   useEffect(() => { fetchEvents() }, [search, filter])
 
   const fetchEvents = async () => {
@@ -28,7 +29,7 @@ export function EventList() {
       if (filter === "upcoming") list = list.filter(e => new Date(e.event_date) >= now)
       else if (filter === "past") list = list.filter(e => new Date(e.event_date) < now)
       setEvents(list)
-    } catch (err) {
+    } catch {
       setMessage({ type: "error", text: "Could not load events." })
     } finally {
       setLoading(false)

@@ -124,7 +124,7 @@ export function CAScoreUpload() {
             a.href = window.URL.createObjectURL(blob);
             a.download = `ca_scores_${className}.csv`;
             a.click();
-        } catch (error) {
+        } catch {
 
             setAlert({ type: 'error', message: 'Failed to generate template' });
         } finally {

@@ -4,11 +4,13 @@ import { contentAPI } from "../api/endpoints"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 import { RichTextEditor } from "../components/ui/RichTextEditor"
+import { useToast } from "../components/ui/toastContext";
 
 export function ContentForm({ defaultContentType = "image" }) {
   const navigate = useNavigate()
   const { id } = useParams()
   const mode = id ? "edit" : "create"
+  const toast = useToast();
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
@@ -24,6 +26,7 @@ export function ContentForm({ defaultContentType = "image" }) {
     if (mode === "edit" && id) {
       fetchContent()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
   }, [id, mode])
 
   const fetchContent = async () => {
@@ -33,7 +36,8 @@ export function ContentForm({ defaultContentType = "image" }) {
       if (response.data.media_url) {
         setPreview(response.data.media_url)
       }
-    } catch (error) {
+    } catch {
+      toast.error('Could not load this item. Go back and try again.');
 
     }
   }

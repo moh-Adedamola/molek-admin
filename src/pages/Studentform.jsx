@@ -56,13 +56,15 @@ export function StudentForm() {
         if (mode === "edit" && id) {
             fetchStudent();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
     }, [id, mode]);
 
     const fetchClassLevels = async () => {
         try {
             const response = await classLevelsAPI.list();
             setClassLevels(response.data.results || response.data || []);
-        } catch (error) {
+        } catch {
+          setError("Could not load classes. Refresh the page and try again.");
 
         }
     };
@@ -71,7 +73,8 @@ export function StudentForm() {
         try {
             const response = await academicSessionsAPI.list();
             setAcademicSessions(response.data.results || response.data || []);
-        } catch (error) {
+        } catch {
+          setError("Could not load academic sessions. Refresh the page and try again.");
 
         }
     };
@@ -80,7 +83,8 @@ export function StudentForm() {
         try {
             const response = await subjectsAPI.list();
             setSubjects(response.data.results || response.data || []);
-        } catch (error) {
+        } catch {
+          setError("Could not load subjects. Refresh the page and try again.");
 
         }
     };
@@ -143,7 +147,7 @@ export function StudentForm() {
             if (data.passport) {
                 setCurrentPassport(data.passport);
             }
-        } catch (error) {
+        } catch {
 
             setError("Unable to fetch student data. Please try again later.");
         }

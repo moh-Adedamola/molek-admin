@@ -25,6 +25,7 @@ export function EventForm() {
 
   useEffect(() => {
     if (isEdit) fetchEvent()
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
   }, [id])
 
   const fetchEvent = async () => {

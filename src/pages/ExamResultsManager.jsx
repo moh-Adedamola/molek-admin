@@ -26,6 +26,7 @@ export function ExamResultsManager() {
     const [newResult, setNewResult] = useState({ student: '', subject: '', session: '', term: '', ca1_score: '', ca2_score: '', obj_score: '', theory_score: '' });
 
     useEffect(() => { fetchDropdownData(); }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
     useEffect(() => { if (filters.session && filters.term && filters.subject) fetchResults(); }, [filters.session, filters.term, filters.class_level, filters.subject, currentPage]);
     useEffect(() => { setCurrentPage(1); }, [filters.session, filters.term, filters.class_level, filters.student, filters.subject]);
 
@@ -43,7 +44,7 @@ export function ExamResultsManager() {
             const currentTerm = (termsRes.data.results || termsRes.data || []).find(t => t.is_current);
             if (currentSession) setFilters(f => ({ ...f, session: currentSession.id.toString() }));
             if (currentTerm) setFilters(f => ({ ...f, term: currentTerm.id.toString() }));
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Could not load data. Please refresh the page.' });
         }
     };
@@ -61,7 +62,7 @@ export function ExamResultsManager() {
             const data = response.data;
             if (data.results) { setResults(data.results); setTotalCount(data.count || data.results.length); }
             else { const arr = Array.isArray(data) ? data : []; setResults(arr); setTotalCount(arr.length); }
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Could not load results.' });
         } finally { setLoading(false); }
     };
@@ -111,7 +112,7 @@ export function ExamResultsManager() {
         try {
             await examResultsAPI.delete(id);
             setMessage({ type: 'success', text: 'Result deleted.' }); fetchResults();
-        } catch (err) { setMessage({ type: 'error', text: 'Could not delete result.' }); }
+        } catch { setMessage({ type: 'error', text: 'Could not delete result.' }); }
     };
 
     const handleRecalculate = async () => {
@@ -126,7 +127,7 @@ export function ExamResultsManager() {
             const data = await response.json();
             if (response.ok) { setMessage({ type: 'success', text: `Recalculated! ${data.totals_fixed || 0} scores updated, ${data.subjects_processed || 0} subjects processed.` }); fetchResults(); }
             else { setMessage({ type: 'error', text: data.error || 'Recalculation failed.' }); }
-        } catch (err) { setMessage({ type: 'error', text: 'Could not recalculate. Check your connection.' }); }
+        } catch { setMessage({ type: 'error', text: 'Could not recalculate. Check your connection.' }); }
         finally { setLoading(false); }
     };
 

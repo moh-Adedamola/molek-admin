@@ -16,6 +16,7 @@ export function FeesManager() {
     const [message, setMessage] = useState(null);
     const [uploadResult, setUploadResult] = useState(null);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
     useEffect(() => { fetchOverview(); fetchClassLevels(); }, [classFilter]);
 
     const fetchOverview = async () => {
@@ -32,7 +33,7 @@ export function FeesManager() {
         try {
             const res = await classLevelsAPI.list();
             setClassLevels(res.data || []);
-        } catch {}
+        } catch { setMessage({ type: 'error', text: 'Could not load classes.' }); }
     };
 
     const handleDownloadTemplate = async () => {

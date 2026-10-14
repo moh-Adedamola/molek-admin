@@ -5,9 +5,11 @@ import { Table } from "../components/ui/Table"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 import { Modal } from "../components/ui/Modal"
+import { useToast } from "../components/ui/toastContext";
 
 export function AdminsList() {
   const navigate = useNavigate()
+  const toast = useToast();
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -18,6 +20,7 @@ export function AdminsList() {
   useEffect(() => {
     fetchAdmins()
     fetchStats()
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
   }, [search, roleFilter])
 
   const fetchAdmins = async () => {
@@ -29,7 +32,8 @@ export function AdminsList() {
 
       const response = await adminsAPI.list(params)
       setAdmins(response.data.results || response.data || [])
-    } catch (error) {
+    } catch {
+      toast.error('Could not load the admin list. Check your connection and refresh.');
 
     } finally {
       setLoading(false)
@@ -40,7 +44,8 @@ export function AdminsList() {
     try {
       const response = await adminsAPI.stats()
       setStats(response.data)
-    } catch (error) {
+    } catch {
+      toast.error('Could not load admin statistics.');
 
     }
   }
@@ -51,7 +56,8 @@ export function AdminsList() {
       setAdmins(admins.filter((a) => a.id !== deleteModal.adminId))
       setDeleteModal({ isOpen: false, adminId: null })
       fetchStats()
-    } catch (error) {
+    } catch {
+      toast.error('Could not delete this admin. Please try again.');
 
     }
   }
@@ -95,7 +101,7 @@ export function AdminsList() {
     {
       key: "id",
       label: "Actions",
-      render: (value, row) => (
+      render: (value) => (
         <div className="flex gap-2">
           <Button size="sm" onClick={() => navigate(`/admins/${value}/edit`)}>
             Edit

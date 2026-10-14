@@ -31,6 +31,7 @@ export function AdminForm() {
     if (mode === "edit" && id) {
       fetchAdmin()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
   }, [id, mode])
 
   const fetchAdmin = async () => {
@@ -41,7 +42,7 @@ export function AdminForm() {
         ...data,
         password: "", // Never populate password field
       })
-    } catch (error) {
+    } catch {
 
       setError("Unable to fetch admin data. Please try again later.")
     }

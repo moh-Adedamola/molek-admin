@@ -5,10 +5,12 @@ import { Table } from "../components/ui/Table";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
+import { useToast } from "../components/ui/toastContext";
 
 export function GalleryList() {
   const navigate = useNavigate();
   const location = useLocation();
+  const toast = useToast();
   const [galleries, setGalleries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -16,6 +18,7 @@ export function GalleryList() {
 
   useEffect(() => {
     fetchGalleries();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
   }, [search, location.key]); //  Added location.key to refetch on navigation
 
   const fetchGalleries = async () => {
@@ -40,7 +43,7 @@ export function GalleryList() {
       //  Filter only active galleries on frontend as backup
       const activeGalleries = galleryData.filter(g => g.is_active !== false);
       setGalleries(activeGalleries);
-    } catch (error) {
+    } catch {
 
       setGalleries([]);
     } finally {
@@ -58,7 +61,8 @@ export function GalleryList() {
       
       //  Refetch to ensure sync
       setTimeout(() => fetchGalleries(), 500);
-    } catch (error) {
+    } catch {
+      toast.error('Could not delete this gallery. Please try again.');
 
     }
   };
@@ -109,7 +113,7 @@ export function GalleryList() {
     {
       key: "id",
       label: "Actions",
-      render: (value, row) => (
+      render: (value) => (
         <div className="flex gap-2">
           <Button
             size="sm"

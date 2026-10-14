@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { studentsAPI, academicSessionsAPI, classLevelsAPI } from '../api/endpoints';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import api from '../api/endpoints';
+import { useToast } from "../components/ui/toastContext";
 
 const CLASS_PROGRESSION = {
     'JSS1': 'JSS2', 'JSS2': 'JSS3', 'JSS3': 'SS1',
@@ -10,16 +10,9 @@ const CLASS_PROGRESSION = {
 };
 
 // Helper to import api instance
-function getApi() {
-    try {
-        // endpoints.js exports a default api instance
-        return api;
-    } catch {
-        return null;
-    }
-}
 
 export function StudentPromotion() {
+    const toast = useToast();
     const [loading, setLoading] = useState(false);
     const [promoting, setPromoting] = useState(false);
     const [alert, setAlert] = useState(null);
@@ -45,6 +38,7 @@ export function StudentPromotion() {
     useEffect(() => {
         loadSessions();
         loadClassLevels();
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- load once when the page opens
     }, []);
 
     const loadSessions = async () => {
@@ -63,7 +57,8 @@ export function StudentPromotion() {
                 const next = (idx >= 0 && idx < sorted.length - 1) ? sorted[idx + 1] : currentSession;
                 setTargetSessionId(next.id.toString());
             }
-        } catch (error) {
+        } catch {
+          toast.error('Could not load academic sessions. Refresh the page and try again.');
 
         }
     };
@@ -73,7 +68,8 @@ export function StudentPromotion() {
             const res = await classLevelsAPI.list();
             const classList = res.data?.results || res.data || [];
             setClassLevels(classList);
-        } catch (error) {
+        } catch {
+          toast.error('Could not load classes. Refresh the page and try again.');
 
         }
     };

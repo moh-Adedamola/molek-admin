@@ -296,16 +296,8 @@ export const galleriesAPI = {
 // ============================================
 export const profileAPI = {
   getCurrent: async () => {
-    try {
-      const response = await cachedGet(
-        "/api/users/profile/",
-        {},
-        CACHE_TTL.data,
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await cachedGet("/api/users/profile/", {}, CACHE_TTL.data);
+    return response.data;
   },
   update: (data) => {
     invalidatePrefix("/api/users/profile");

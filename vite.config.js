@@ -7,6 +7,8 @@ export default defineConfig({
   plugins: [react(),  tailwindcss()],
   server: { 
     proxy: 
-    { '/admin': 'http://localhost:8000' } 
+    // Django's own admin pages only. The trailing slash matters: '/admin' would
+    // also capture the app's /admins page and break it in dev and preview.
+    { '/admin/': 'http://localhost:8000' } 
   }
 })

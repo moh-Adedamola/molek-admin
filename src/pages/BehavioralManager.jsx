@@ -19,11 +19,13 @@ export function BehavioralManager() {
     const [loadingList, setLoadingList] = useState(false);
 
     useEffect(() => { fetchClassLevels(); fetchSessions(); }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
     useEffect(() => { if (sessionId) fetchTerms(); }, [sessionId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
     useEffect(() => { if (sessionId && termId) fetchAssessments(); }, [sessionId, termId, classFilter]);
 
     const fetchClassLevels = async () => {
-        try { const res = await classLevelsAPI.list(); setClassLevels(res.data || []); } catch {}
+        try { const res = await classLevelsAPI.list(); setClassLevels(res.data || []); } catch { setMessage({ type: 'error', text: 'Could not load classes.' }); }
     };
 
     const fetchSessions = async () => {
@@ -33,7 +35,7 @@ export function BehavioralManager() {
             setSessions(list);
             const current = list.find(s => s.is_current) || list[0];
             if (current) setSessionId(current.id);
-        } catch {}
+        } catch { setMessage({ type: 'error', text: 'Could not load sessions.' }); }
     };
 
     const fetchTerms = async () => {
@@ -43,7 +45,7 @@ export function BehavioralManager() {
             setTerms(list);
             const current = list.find(t => t.is_current) || list[0];
             if (current) setTermId(current.id);
-        } catch {}
+        } catch { setMessage({ type: 'error', text: 'Could not load terms.' }); }
     };
 
     const fetchAssessments = async () => {

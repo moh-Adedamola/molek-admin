@@ -4,6 +4,7 @@ import { contentAPI } from "../api/endpoints"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 import { Modal } from "../components/ui/Modal"
+import { useToast } from "../components/ui/toastContext";
 
 // Strip HTML tags for plain-text previews in the list.
 const stripHtml = (html) => {
@@ -20,6 +21,7 @@ const stripHtml = (html) => {
 
 export function ContentList({ defaultContentType = "all", pageTitle = "Content Management" }) {
   const navigate = useNavigate()
+  const toast = useToast();
   const [content, setContent] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -29,6 +31,7 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
 
   useEffect(() => {
     fetchContent()
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
   }, [search, typeFilter])
 
   const fetchContent = async () => {
@@ -40,7 +43,8 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
 
       const response = await contentAPI.list(params)
       setContent(response.data.results || response.data || [])
-    } catch (error) {
+    } catch {
+      toast.error('Could not load content. Check your connection and refresh.');
 
     } finally {
       setLoading(false)
@@ -52,7 +56,8 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
       await contentAPI.delete(deleteModal.contentId)
       setContent(content.filter((c) => c.id !== deleteModal.contentId))
       setDeleteModal({ isOpen: false, contentId: null })
-    } catch (error) {
+    } catch {
+      toast.error('Could not delete this item. Please try again.');
 
     }
   }
@@ -61,7 +66,8 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
     try {
       await contentAPI.update(item.id, { published: !item.published })
       setContent(content.map((c) => (c.id === item.id ? { ...c, published: !c.published } : c)))
-    } catch (error) {
+    } catch {
+      toast.error('Could not change whether this item is published. Please try again.');
 
     }
   }

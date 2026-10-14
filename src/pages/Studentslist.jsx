@@ -31,6 +31,7 @@ export function StudentsList() {
 
     useEffect(() => { const timer = setTimeout(() => setDebouncedSearch(search), 400); return () => clearTimeout(timer); }, [search]);
     useEffect(() => { setCurrentPage(1); }, [debouncedSearch, classFilter, statusFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the listed values change, by design
     useEffect(() => { fetchStudents(); }, [debouncedSearch, classFilter, statusFilter, currentPage]);
     useEffect(() => { fetchClassLevels(); fetchStats(); }, []);
     useEffect(() => { setSelectedIds([]); }, [currentPage, classFilter, statusFilter, debouncedSearch]);
@@ -91,7 +92,7 @@ export function StudentsList() {
             const link = document.createElement('a'); link.href = url;
             link.setAttribute('download', `students_${className}.csv`);
             document.body.appendChild(link); link.click(); link.remove();
-        } catch (error) { setMessage({ type: 'error', text: 'Failed to export CSV.' }); }
+        } catch { setMessage({ type: 'error', text: 'Failed to export CSV.' }); }
     };
 
     const handleExportForCBT = async () => {
@@ -109,7 +110,7 @@ export function StudentsList() {
             link.setAttribute('download', `students_cbt_${className}.csv`);
             document.body.appendChild(link); link.click(); link.remove();
             setMessage({ type: 'success', text: 'CBT credentials exported.' });
-        } catch (error) { setMessage({ type: 'error', text: 'Failed to export CBT credentials.' }); }
+        } catch { setMessage({ type: 'error', text: 'Failed to export CBT credentials.' }); }
     };
 
     const handleBulkActivate = async (activate) => {
@@ -122,7 +123,7 @@ export function StudentsList() {
             const data = await response.json();
             if (response.ok) { setMessage({ type: 'success', text: data.message }); fetchStudents(); fetchStats(); }
             else { setMessage({ type: 'error', text: data.error || 'Failed.' }); }
-        } catch (error) { setMessage({ type: 'error', text: 'Could not connect to server.' }); }
+        } catch { setMessage({ type: 'error', text: 'Could not connect to server.' }); }
         setActivateModal({ isOpen: false, action: 'activate' });
     };
 
@@ -136,7 +137,7 @@ export function StudentsList() {
             const data = await response.json();
             if (response.ok) { setMessage({ type: 'success', text: data.message }); setSelectedIds([]); fetchStudents(); fetchStats(); }
             else { setMessage({ type: 'error', text: data.error || 'Failed.' }); }
-        } catch (error) { setMessage({ type: 'error', text: 'Could not connect to server.' }); }
+        } catch { setMessage({ type: 'error', text: 'Could not connect to server.' }); }
         setBulkDeleteModal({ isOpen: false, permanent: false });
     };
 

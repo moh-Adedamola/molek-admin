@@ -1,37 +1,41 @@
+import { lazy } from "react"
 import { Routes as ReactRoutes, Route, Navigate } from "react-router-dom"
 import { useAuth } from "./hooks/useAuth"
 import { PrivateRoute } from "./components/layout/PrivateRoute"
 import { Login } from "./pages/Login"
-import { Dashboard } from "./pages/Dashboard"
-import { AdminsList } from "./pages/Adminslist"
-import { AdminForm } from "./pages/Adminform"
-import { ContentList } from "./pages/ContentList"
-import { ContentForm } from "./pages/ContentForm"
-import { GalleryList } from "./pages/GalleryList"
-import { GalleryForm } from "./pages/GalleryForm"
-import { EventList } from "./pages/EventList"
-import { EventForm } from "./pages/EventForm"
-import { Profile } from "./pages/Profile"
 import { NotFound } from "./pages/NotFound"
+
+// Each page loads when it is first opened, so staff on slow connections
+// download only the screen they need (Login and the 404 page load up front).
+const Dashboard = lazy(() => import("./pages/Dashboard").then((m) => ({ default: m.Dashboard })))
+const AdminsList = lazy(() => import("./pages/Adminslist").then((m) => ({ default: m.AdminsList })))
+const AdminForm = lazy(() => import("./pages/Adminform").then((m) => ({ default: m.AdminForm })))
+const ContentList = lazy(() => import("./pages/ContentList").then((m) => ({ default: m.ContentList })))
+const ContentForm = lazy(() => import("./pages/ContentForm").then((m) => ({ default: m.ContentForm })))
+const GalleryList = lazy(() => import("./pages/GalleryList").then((m) => ({ default: m.GalleryList })))
+const GalleryForm = lazy(() => import("./pages/GalleryForm").then((m) => ({ default: m.GalleryForm })))
+const EventList = lazy(() => import("./pages/EventList").then((m) => ({ default: m.EventList })))
+const EventForm = lazy(() => import("./pages/EventForm").then((m) => ({ default: m.EventForm })))
+const Profile = lazy(() => import("./pages/Profile").then((m) => ({ default: m.Profile })))
+const StudentsList = lazy(() => import("./pages/Studentslist").then((m) => ({ default: m.StudentsList })))
+const StudentForm = lazy(() => import("./pages/Studentform").then((m) => ({ default: m.StudentForm })))
+const StudentBulkUpload = lazy(() => import("./pages/Studentbulkupload").then((m) => ({ default: m.StudentBulkUpload })))
+const StudentPromotion = lazy(() => import("./pages/StudentPromotion").then((m) => ({ default: m.StudentPromotion })))
+const PromotionRevert = lazy(() => import("./pages/PromotionRevert").then((m) => ({ default: m.PromotionRevert })))
+const StudentResultsHistory = lazy(() => import("./pages/StudentResultsHistory").then((m) => ({ default: m.StudentResultsHistory })))
+const CAScoreUpload = lazy(() => import("./pages/Cascoreupload").then((m) => ({ default: m.CAScoreUpload })))
+const ExamResultsImport = lazy(() => import("./pages/Examresultsimport").then((m) => ({ default: m.ExamResultsImport })))
+const AcademicSetup = lazy(() => import("./pages/Academicsetup.jsx").then((m) => ({ default: m.AcademicSetup })))
+const ExamResultsManager = lazy(() => import("./pages/ExamResultsManager").then((m) => ({ default: m.ExamResultsManager })))
+const UnifiedScoreUpload = lazy(() => import("./pages/UnifiedScoreUpload").then((m) => ({ default: m.UnifiedScoreUpload })))
+const FeesManager = lazy(() => import("./pages/FeesManager").then((m) => ({ default: m.FeesManager })))
+const BehavioralManager = lazy(() => import("./pages/BehavioralManager").then((m) => ({ default: m.BehavioralManager })))
+const Broadsheet = lazy(() => import("./pages/Broadsheet").then((m) => ({ default: m.Broadsheet })))
 // Student Management Imports
-import { StudentsList } from "./pages/Studentslist"
-import { StudentForm } from "./pages/Studentform"
-import { StudentBulkUpload } from "./pages/Studentbulkupload"
-import { StudentPromotion } from "./pages/StudentPromotion"
-import { PromotionRevert } from "./pages/PromotionRevert"
-import { StudentResultsHistory } from "./pages/StudentResultsHistory"
-import { CAScoreUpload } from "./pages/Cascoreupload"
-import { ExamResultsImport } from "./pages/Examresultsimport"
-import { AcademicSetup } from "./pages/Academicsetup.jsx"
 // Results Manager Import
-import { ExamResultsManager } from "./pages/ExamResultsManager"
 // Unified Score Upload
-import { UnifiedScoreUpload } from "./pages/UnifiedScoreUpload"
 // Fees & Behavioral Management
-import { FeesManager } from "./pages/FeesManager"
-import { BehavioralManager } from "./pages/BehavioralManager"
 // Broadsheet (cumulative results grid)
-import { Broadsheet } from "./pages/Broadsheet"
 
 export default function Routes() {
     const { isAuthenticated } = useAuth()
