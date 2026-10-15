@@ -4,8 +4,7 @@ import { useAuth } from "../../hooks/useAuth"
 import {
     LayoutDashboard, Users, GraduationCap, ArrowUpCircle, Settings,
     Upload, ClipboardList, Film, Newspaper, Image, ChevronDown, ChevronRight, Menu, X,
-    Wallet, HeartHandshake, CalendarDays, Calendar, Table2, Undo2, History
-} from "lucide-react"
+    Wallet, HeartHandshake, CalendarDays, Calendar, Table2, Undo2, History, SlidersHorizontal } from "lucide-react"
 
 const navGroups = [
     {
@@ -20,6 +19,7 @@ const navGroups = [
             { path: "/admins", label: "Admins", icon: Users },
             { path: "/students", label: "Students", icon: GraduationCap },
             { path: "/students/promote", label: "Promotion", icon: ArrowUpCircle },
+            { path: "/students/promotion-rules", label: "Promotion Rules", icon: SlidersHorizontal },
             { path: "/students/revert", label: "Promotion History", icon: Undo2 },
             { path: "/students/results-history", label: "Results History", icon: History },
             { path: "/fees", label: "Fees", icon: Wallet },
@@ -93,8 +93,10 @@ export function Sidebar() {
                         <div key={group.label} className="mb-2">
                             {/* Group header */}
                             <button
+                                type="button"
                                 onClick={() => toggleGroup(group.label)}
-                                className="w-full flex items-center justify-between px-3 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors"
+                                aria-expanded={!collapsedGroups[group.label]}
+                                className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wider hover:text-gray-900 transition-colors"
                             >
                                 <span>{group.label}</span>
                                 {collapsedGroups[group.label] ? <ChevronRight size={12} /> : <ChevronDown size={12} />}

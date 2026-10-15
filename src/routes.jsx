@@ -20,6 +20,7 @@ const Profile = lazy(() => import("./pages/Profile").then((m) => ({ default: m.P
 const StudentsList = lazy(() => import("./pages/Studentslist").then((m) => ({ default: m.StudentsList })))
 const StudentForm = lazy(() => import("./pages/Studentform").then((m) => ({ default: m.StudentForm })))
 const StudentBulkUpload = lazy(() => import("./pages/Studentbulkupload").then((m) => ({ default: m.StudentBulkUpload })))
+const PromotionRules = lazy(() => import("./pages/PromotionRules").then((m) => ({ default: m.PromotionRules })))
 const StudentPromotion = lazy(() => import("./pages/StudentPromotion").then((m) => ({ default: m.StudentPromotion })))
 const PromotionRevert = lazy(() => import("./pages/PromotionRevert").then((m) => ({ default: m.PromotionRevert })))
 const StudentResultsHistory = lazy(() => import("./pages/StudentResultsHistory").then((m) => ({ default: m.StudentResultsHistory })))
@@ -125,6 +126,15 @@ export default function Routes() {
                     </PrivateRoute>
                 }
             />
+            <Route
+                path="/students/promotion-rules"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <PromotionRules />
+                    </PrivateRoute>
+                }
+            />
+
             <Route
                 path="/students/revert"
                 element={

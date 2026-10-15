@@ -367,6 +367,7 @@ export const studentsAPI = {
     cachedGet("/api/users/promotion/rules/", { params }, CACHE_TTL.academic),
   savePromotionRules: (data) => {
     invalidatePrefix("/api/users/promotion");
+    invalidatePrefix("/api/users/broadsheet"); // its "No. passed" uses the pass mark
     return api.post("/api/users/promotion/rules/save/", data);
   },
   getPromotionSubjects: () =>
