@@ -152,7 +152,7 @@ export function EventList() {
                     <button onClick={() => handleTogglePublish(event)} className="flex-1 px-3 py-1.5 text-xs text-purple-600 hover:bg-purple-50 rounded-lg">
                       {event.is_published ? "Unpublish" : "Publish"}
                     </button>
-                    <button onClick={() => setDeleteModal({ isOpen: true, eventId: event.id, title: event.title })} className="flex items-center justify-center px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg">
+                    <button type="button" aria-label={`Delete ${event.title}`} onClick={() => setDeleteModal({ isOpen: true, eventId: event.id, title: event.title })} className="flex items-center justify-center px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg">
                       <Trash2 size={14} />
                     </button>
                   </div>

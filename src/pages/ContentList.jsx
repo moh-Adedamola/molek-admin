@@ -108,7 +108,7 @@ export function ContentList({ defaultContentType = "all", pageTitle = "Content M
                 onClick={() => setTypeFilter(type)}
                 className={`px-4 py-3 rounded-xl font-semibold transition-all ${
                   typeFilter === type
-                    ? "bg-blue-500 text-white"
+                    ? "bg-blue-700 text-white"
                     : "bg-gray-200 text-gray-900 hover:bg-gray-300"
                 }`}
               >

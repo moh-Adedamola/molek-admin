@@ -435,7 +435,7 @@ export function StudentForm() {
                             <label className="block font-semibold text-gray-700 mb-2">
                                 Class Level <span className="text-red-500">*</span>
                             </label>
-                            <select
+                            <select aria-label="Class Level"
                                 value={formData.class_level}
                                 onChange={(e) => setFormData({ ...formData, class_level: e.target.value })}
                                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200"
@@ -453,7 +453,7 @@ export function StudentForm() {
                             <label className="block font-semibold text-gray-700 mb-2">
                                 Enrollment Session <span className="text-red-500">*</span>
                             </label>
-                            <select
+                            <select aria-label="Enrollment Session"
                                 value={formData.enrollment_session}
                                 onChange={(e) => setFormData({ ...formData, enrollment_session: e.target.value })}
                                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200"

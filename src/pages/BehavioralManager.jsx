@@ -130,21 +130,21 @@ export function BehavioralManager() {
             <div className="bg-white rounded-xl border border-gray-200 p-5 grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                     <label className="text-xs font-semibold text-gray-600 uppercase">Session</label>
-                    <select value={sessionId} onChange={(e) => setSessionId(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200">
+                    <select aria-label="Session" value={sessionId} onChange={(e) => setSessionId(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200">
                         <option value="">— Select —</option>
                         {sessions.map((s) => <option key={s.id} value={s.id}>{s.name}{s.is_current ? ' (Current)' : ''}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="text-xs font-semibold text-gray-600 uppercase">Term</label>
-                    <select value={termId} onChange={(e) => setTermId(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200" disabled={!sessionId}>
+                    <select aria-label="Term" value={termId} onChange={(e) => setTermId(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200" disabled={!sessionId}>
                         <option value="">— Select —</option>
                         {terms.map((t) => <option key={t.id} value={t.id}>{t.name}{t.is_current ? ' (Current)' : ''}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="text-xs font-semibold text-gray-600 uppercase">Class</label>
-                    <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200">
+                    <select aria-label="Class" value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200">
                         <option value="all">All Classes</option>
                         {classLevels.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
@@ -171,7 +171,7 @@ export function BehavioralManager() {
                 </h3>
                 <p className="text-sm text-gray-600 mb-3">Re-uploading updates existing assessments for the same student/session/term.</p>
                 <div className="flex items-center gap-3 flex-wrap">
-                    <input type="file" accept=".csv" onChange={(e) => setUploadFile(e.target.files[0])}
+                    <input type="file" aria-label="Behaviour CSV file" accept=".csv" onChange={(e) => setUploadFile(e.target.files[0])}
                         className="text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                     <Button onClick={handleUpload} disabled={!uploadFile || uploading || !sessionId || !termId}>
                         <Upload size={16} className="mr-1" /> {uploading ? 'Uploading...' : 'Upload'}

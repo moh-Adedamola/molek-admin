@@ -172,7 +172,7 @@ export function CAScoreUpload() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                         <label className="block font-semibold text-gray-700 mb-2">Academic Session *</label>
-                        <select value={formData.sessionId} onChange={(e) => setFormData({ ...formData, sessionId: e.target.value, termId: '' })}
+                        <select aria-label="Academic Session" value={formData.sessionId} onChange={(e) => setFormData({ ...formData, sessionId: e.target.value, termId: '' })}
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200">
                             <option value="">Select Session</option>
                             {sessions.map(s => <option key={s.id} value={s.id}>{s.name}{(s.is_current || s.is_active) ? ' (Current)' : ''}</option>)}
@@ -180,7 +180,7 @@ export function CAScoreUpload() {
                     </div>
                     <div>
                         <label className="block font-semibold text-gray-700 mb-2">Term *</label>
-                        <select value={formData.termId} onChange={(e) => setFormData({ ...formData, termId: e.target.value })}
+                        <select aria-label="Term" value={formData.termId} onChange={(e) => setFormData({ ...formData, termId: e.target.value })}
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200" disabled={!formData.sessionId}>
                             <option value="">Select Term</option>
                             {terms.map(t => <option key={t.id} value={t.id}>{t.name}{(t.is_current || t.is_active) ? ' (Current)' : ''}</option>)}
@@ -192,7 +192,7 @@ export function CAScoreUpload() {
                 <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200 mb-6">
                     <h3 className="font-semibold text-green-900 mb-3"> Download Template (Pre-filled with Students)</h3>
                     <div className="flex flex-col sm:flex-row gap-3">
-                        <select value={templateClass} onChange={(e) => setTemplateClass(e.target.value)}
+                        <select aria-label="Class" value={templateClass} onChange={(e) => setTemplateClass(e.target.value)}
                             className="flex-1 px-4 py-3 rounded-xl border-2 border-green-300">
                             <option value="">Select Class</option>
                             {classLevels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -201,7 +201,7 @@ export function CAScoreUpload() {
                             {downloadingTemplate ? ' Generating...' : ' Download Template'}
                         </Button>
                     </div>
-                    <p className="text-xs text-green-600 mt-2">
+                    <p className="text-xs text-green-800 mt-2">
                         Template includes student names for easy identification. The name column is ignored during upload.
                     </p>
                 </div>

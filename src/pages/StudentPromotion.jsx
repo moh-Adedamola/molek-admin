@@ -267,7 +267,7 @@ export function StudentPromotion() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Session</label>
-                        <select value={filters.sessionId} onChange={(e) => setFilters(prev => ({ ...prev, sessionId: e.target.value }))}
+                        <select aria-label="Session" value={filters.sessionId} onChange={(e) => setFilters(prev => ({ ...prev, sessionId: e.target.value }))}
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
                             <option value="">Select Session</option>
                             {sessions.map(s => (
@@ -277,7 +277,7 @@ export function StudentPromotion() {
                     </div>
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Class Level</label>
-                        <select value={filters.classLevel} onChange={(e) => setFilters(prev => ({ ...prev, classLevel: e.target.value }))}
+                        <select aria-label="Class Level" value={filters.classLevel} onChange={(e) => setFilters(prev => ({ ...prev, classLevel: e.target.value }))}
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
                             <option value="">Select Class</option>
                             {classLevels.map(c => (
@@ -287,7 +287,7 @@ export function StudentPromotion() {
                     </div>
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Promote into session</label>
-                        <select value={targetSessionId} onChange={(e) => setTargetSessionId(e.target.value)}
+                        <select aria-label="Promote into session" value={targetSessionId} onChange={(e) => setTargetSessionId(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
                             <option value="">Select Session</option>
                             {sessions.map(s => (

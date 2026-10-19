@@ -12,6 +12,7 @@ const AdminsList = lazy(() => import("./pages/Adminslist").then((m) => ({ defaul
 const AdminForm = lazy(() => import("./pages/Adminform").then((m) => ({ default: m.AdminForm })))
 const ContentList = lazy(() => import("./pages/ContentList").then((m) => ({ default: m.ContentList })))
 const ContentForm = lazy(() => import("./pages/ContentForm").then((m) => ({ default: m.ContentForm })))
+const GalleryEdit = lazy(() => import("./pages/GalleryEdit").then((m) => ({ default: m.GalleryEdit })))
 const GalleryList = lazy(() => import("./pages/GalleryList").then((m) => ({ default: m.GalleryList })))
 const GalleryForm = lazy(() => import("./pages/GalleryForm").then((m) => ({ default: m.GalleryForm })))
 const EventList = lazy(() => import("./pages/EventList").then((m) => ({ default: m.EventList })))
@@ -288,6 +289,14 @@ export default function Routes() {
                 element={
                     <PrivateRoute requiredRoles={["admin", "superadmin"]}>
                         <GalleryList />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/galleries/:id/edit"
+                element={
+                    <PrivateRoute requiredRoles={["admin", "superadmin"]}>
+                        <GalleryEdit />
                     </PrivateRoute>
                 }
             />

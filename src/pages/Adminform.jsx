@@ -194,7 +194,7 @@ export function AdminForm() {
 
             <div>
               <label className="block font-semibold text-gray-700 mb-2">Role</label>
-              <select
+              <select aria-label="Role"
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200"

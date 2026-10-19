@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { academicSessionsAPI, termsAPI, classLevelsAPI, studentsAPI, invalidateScoreCaches } from '../api/endpoints';
 import { Upload, Download, FileText, CheckCircle, AlertCircle, Info } from 'lucide-react';
@@ -145,6 +146,10 @@ export function UnifiedScoreUpload() {
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Upload Scores</h1>
                 <p className="text-sm text-gray-500 mt-1">Upload all scores (CA1 15, CA2 15, OBJ + Theory 70 combined) in a single CSV file</p>
+                <nav aria-label="Other score uploads" className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                    <Link to="/exam-results" className="font-semibold text-blue-700 underline underline-offset-2">Import CBT objective scores (from the CBT app)</Link>
+                    <Link to="/ca-scores" className="font-semibold text-blue-700 underline underline-offset-2">Upload CA scores only</Link>
+                </nav>
             </div>
 
             {alert && <AlertBanner {...alert} onClose={() => setAlert(null)} />}
@@ -157,7 +162,7 @@ export function UnifiedScoreUpload() {
                 </div>
                 <p className="text-sm text-gray-500 mb-4">Pick a class to get a CSV pre-filled with student names and admission numbers.</p>
                 <div className="flex gap-3">
-                    <select value={templateClass} onChange={(e) => setTemplateClass(e.target.value)}
+                    <select aria-label="Class" value={templateClass} onChange={(e) => setTemplateClass(e.target.value)}
                         className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                         <option value="">Select class...</option>
                         {classLevels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -180,7 +185,7 @@ export function UnifiedScoreUpload() {
                 <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1.5">Session</label>
-                        <select value={formData.sessionId} onChange={(e) => setFormData({ ...formData, sessionId: e.target.value, termId: '' })}
+                        <select aria-label="Session" value={formData.sessionId} onChange={(e) => setFormData({ ...formData, sessionId: e.target.value, termId: '' })}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                             <option value="">Select session...</option>
                             {sessions.map(s => <option key={s.id} value={s.id}>{s.name}{(s.is_current || s.is_active) ? ' (Current)' : ''}</option>)}
@@ -188,7 +193,7 @@ export function UnifiedScoreUpload() {
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1.5">Term</label>
-                        <select value={formData.termId} onChange={(e) => setFormData({ ...formData, termId: e.target.value })}
+                        <select aria-label="Term" value={formData.termId} onChange={(e) => setFormData({ ...formData, termId: e.target.value })}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" disabled={!formData.sessionId}>
                             <option value="">Select term...</option>
                             {terms.map(t => <option key={t.id} value={t.id}>{t.name}{(t.is_current || t.is_active) ? ' (Current)' : ''}</option>)}

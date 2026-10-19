@@ -288,6 +288,19 @@ export const galleriesAPI = {
     invalidatePrefix("/api/galleries");
     return api.delete(`/api/galleries/${id}/`);
   },
+  // Edit an existing album: title/description, add photos, remove one photo.
+  patch: (id, data) => {
+    invalidatePrefix("/api/galleries");
+    return api.patch(`/api/galleries/${id}/`, data);
+  },
+  addImages: (id, formData) => {
+    invalidatePrefix("/api/galleries");
+    return api.post(`/api/galleries/${id}/add_images/`, formData, { headers: { "Content-Type": "multipart/form-data" } });
+  },
+  removeImage: (id, imageId) => {
+    invalidatePrefix("/api/galleries");
+    return api.delete(`/api/galleries/${id}/remove_image/`, { params: { image_id: imageId } });
+  },
   stats: () => cachedGet("/api/galleries/stats/", {}, CACHE_TTL.stats),
 };
 
@@ -390,9 +403,10 @@ export const academicSessionsAPI = {
     invalidatePrefix("/api/academic-sessions");
     return api.put(`/api/academic-sessions/${id}/`, data);
   },
-  delete: (id) => {
+  delete: (id, params = {}) => {
     invalidatePrefix("/api/academic-sessions");
-    return api.delete(`/api/academic-sessions/${id}/`);
+    // params.confirm = the exact name, once staff have typed it (needed when data is attached)
+    return api.delete(`/api/academic-sessions/${id}/`, { params });
   },
   setActive: (id) => {
     invalidatePrefix("/api/academic-sessions");
@@ -415,9 +429,10 @@ export const termsAPI = {
     invalidatePrefix("/api/terms");
     return api.put(`/api/terms/${id}/`, data);
   },
-  delete: (id) => {
+  delete: (id, params = {}) => {
     invalidatePrefix("/api/terms");
-    return api.delete(`/api/terms/${id}/`);
+    // params.confirm = the exact name, once staff have typed it (needed when data is attached)
+    return api.delete(`/api/terms/${id}/`, { params });
   },
   setActive: (id) => {
     invalidatePrefix("/api/terms");
@@ -440,9 +455,10 @@ export const classLevelsAPI = {
     invalidatePrefix("/api/class-levels");
     return api.put(`/api/class-levels/${id}/`, data);
   },
-  delete: (id) => {
+  delete: (id, params = {}) => {
     invalidatePrefix("/api/class-levels");
-    return api.delete(`/api/class-levels/${id}/`);
+    // params.confirm = the exact name, once staff have typed it (needed when data is attached)
+    return api.delete(`/api/class-levels/${id}/`, { params });
   },
 };
 

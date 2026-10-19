@@ -82,7 +82,7 @@ export function GalleryList() {
     },
     {
       key: "media_count",
-      label: "Media",
+      label: "Media", hideOnMobile: true,
       render: (value) => (
         <span className="bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm font-semibold">
           {value || 0} {value === 1 ? "item" : "items"}
@@ -91,12 +91,12 @@ export function GalleryList() {
     },
     {
       key: "created_by",
-      label: "Created By",
+      label: "Created By", hideOnMobile: true,
       render: (value) => value?.username || "Admin",
     },
     {
       key: "created_at",
-      label: "Date",
+      label: "Date", hideOnMobile: true,
       render: (value) => new Date(value).toLocaleDateString(),
     },
     {
@@ -115,6 +115,7 @@ export function GalleryList() {
       label: "Actions",
       render: (value) => (
         <div className="flex gap-2">
+          <Button size="sm" onClick={() => navigate(`/galleries/${value}/edit`)}>Edit</Button>
           <Button
             size="sm"
             variant="danger"

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../hooks/useAuth"
 import { authAPI, profileAPI } from "../api/endpoints"
@@ -6,6 +6,7 @@ import { Button } from "../components/ui/Button"
 import { Eye, EyeOff } from "lucide-react"
 
 export function Login() {
+    useEffect(() => { document.title = "Sign in | MOLEK Admin" }, [])
   const navigate = useNavigate()
   const { login } = useAuth()
   const [loading, setLoading] = useState(false)

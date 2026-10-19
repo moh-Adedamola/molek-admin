@@ -142,7 +142,7 @@ export function Broadsheet() {
                             <Download className="w-4 h-4" /> CSV
                         </button>
                         <button onClick={() => window.print()}
-                            className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
+                            className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-emerald-700 text-white hover:bg-emerald-700">
                             <Printer className="w-4 h-4" /> Print
                         </button>
                     </div>
@@ -154,7 +154,7 @@ export function Broadsheet() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Session</label>
-                        <select value={filters.session}
+                        <select aria-label="Session" value={filters.session}
                             onChange={(e) => setFilters({ ...filters, session: e.target.value, term: '' })}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                             <option value="">Select session</option>
@@ -163,7 +163,7 @@ export function Broadsheet() {
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Term</label>
-                        <select value={filters.term}
+                        <select aria-label="Term" value={filters.term}
                             onChange={(e) => setFilters({ ...filters, term: e.target.value })}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                             <option value="">Select term</option>
@@ -172,7 +172,7 @@ export function Broadsheet() {
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Class</label>
-                        <select value={filters.class_level}
+                        <select aria-label="Class" value={filters.class_level}
                             onChange={(e) => setFilters({ ...filters, class_level: e.target.value })}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                             <option value="">Select class</option>
@@ -181,7 +181,7 @@ export function Broadsheet() {
                     </div>
                     <div className="flex items-end">
                         <button onClick={loadSheet} disabled={loading}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50">
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-lg bg-emerald-700 text-white hover:bg-emerald-700 disabled:opacity-50">
                             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                             {loading ? 'Loading…' : 'Load Broadsheet'}
                         </button>
@@ -221,7 +221,7 @@ export function Broadsheet() {
                                     <th rowSpan={2} className="border border-emerald-800 px-1 py-1">AVG %</th>
                                     <th rowSpan={2} className="border border-emerald-800 px-1 py-1">POS</th>
                                 </tr>
-                                <tr className="bg-emerald-600 text-white">
+                                <tr className="bg-emerald-700 text-white">
                                     {sheet.subjects.map(s => (
                                         sheet.columns.map((c, i) => (
                                             <th key={`${s.id}-${i}`} className="border border-emerald-800 px-1 py-0.5 font-normal whitespace-nowrap">{c}</th>

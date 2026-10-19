@@ -11,10 +11,10 @@ export function Button({
 
   const variants = {
     primary:
-      "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:scale-105 hover:shadow-lg",
+      "bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white hover:scale-105 hover:shadow-lg",
     secondary: "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600",
-    danger: "bg-red-500 hover:bg-red-600 text-white hover:scale-105",
-    outline: "border-2 border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20",
+    danger: "bg-red-700 hover:bg-red-800 text-white hover:scale-105",
+    outline: "border-2 border-blue-700 text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20",
   }
 
   const sizes = {

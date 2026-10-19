@@ -194,7 +194,7 @@ export function ExamResultsImport() {
                              Download {activeTab === 'obj' ? 'OBJ/CBT' : 'Theory'} Template (Pre-filled with Students)
                         </h3>
                         <div className="flex flex-col sm:flex-row gap-3">
-                            <select value={templateClass} onChange={(e) => setTemplateClass(e.target.value)}
+                            <select aria-label="Class" value={templateClass} onChange={(e) => setTemplateClass(e.target.value)}
                                 className="flex-1 px-4 py-3 rounded-xl border-2 border-green-300">
                                 <option value="">Select Class</option>
                                 {classLevels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -204,7 +204,7 @@ export function ExamResultsImport() {
                                 {downloadingTemplate ? ' Generating...' : ' Download Template'}
                             </button>
                         </div>
-                        <p className="text-xs text-green-600 mt-2">
+                        <p className="text-xs text-green-800 mt-2">
                             Template includes student names for easy identification. The name column is ignored during upload.
                         </p>
                     </div>
@@ -215,14 +215,14 @@ export function ExamResultsImport() {
                         <code className="text-sm block bg-white p-2 rounded font-mono mb-2">
                             {activeTab === 'obj' ? 'admission_number,student_name,subject,obj_score,total_questions' : 'admission_number,student_name,subject,theory_score'}
                         </code>
-                        <p className="text-xs text-gray-500 mt-1">student_name column is for reference only — ignored during upload</p>
+                        <p className="text-xs text-gray-700 mt-1">student_name column is for reference only — ignored during upload</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Session */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Academic Session *</label>
-                            <select value={selectedSession} onChange={(e) => { setSelectedSession(e.target.value); setSelectedTerm(''); }}
+                            <select aria-label="Academic Session" value={selectedSession} onChange={(e) => { setSelectedSession(e.target.value); setSelectedTerm(''); }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
                                 <option value="">Select Session</option>
                                 {sessions.map(s => <option key={s.id} value={s.id}>{s.name} {(s.is_current || s.is_active) && "(Current)"}</option>)}
@@ -232,7 +232,7 @@ export function ExamResultsImport() {
                         {/* Term */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Term *</label>
-                            <select value={selectedTerm} onChange={(e) => setSelectedTerm(e.target.value)}
+                            <select aria-label="Term" value={selectedTerm} onChange={(e) => setSelectedTerm(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg" required disabled={!selectedSession}>
                                 <option value="">Select Term</option>
                                 {terms.map(t => <option key={t.id} value={t.id}>{t.name} {(t.is_current || t.is_active) && "(Current)"}</option>)}
@@ -242,7 +242,7 @@ export function ExamResultsImport() {
                         {/* File */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">CSV File *</label>
-                            <input id="csv-file" type="file" accept=".csv" onChange={handleFileChange}
+                            <input id="csv-file" aria-label="CSV file" type="file" accept=".csv" onChange={handleFileChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
                         </div>
 

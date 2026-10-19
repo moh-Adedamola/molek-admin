@@ -150,8 +150,8 @@ export function StudentsList() {
     const columns = [
         {
             key: "_select",
-            label: (<input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer" />),
-            render: (_, row) => (<input type="checkbox" checked={selectedIds.includes(row.id)} onChange={() => toggleSelect(row.id)} className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer" />),
+            label: (<input type="checkbox" aria-label="Select all students on this page" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer" />),
+            render: (_, row) => (<input type="checkbox" aria-label={`Select ${row.admission_number}`} checked={selectedIds.includes(row.id)} onChange={() => toggleSelect(row.id)} className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer" />),
         },
         {
             key: "admission_number", label: "Admission No.",
@@ -165,8 +165,8 @@ export function StudentsList() {
         },
         { key: "full_name", label: "Full Name", render: (value, row) => value || `${row.first_name} ${row.middle_name ? row.middle_name + ' ' : ''}${row.last_name}` },
         { key: "class_level_name", label: "Class", render: (value) => <span className="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm font-semibold">{value || 'N/A'}</span> },
-        { key: "gender", label: "Gender", render: (value) => value === 'M' ? 'Male' : 'Female' },
-        { key: "date_of_birth", label: "Date of Birth", render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A' },
+        { key: "gender", label: "Gender", hideOnMobile: true, render: (value) => value === 'M' ? 'Male' : 'Female' },
+        { key: "date_of_birth", label: "Date of Birth", hideOnMobile: true, render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A' },
         { key: "is_active", label: "Status", render: (value) => (<span className={`rounded-full px-3 py-1 text-sm font-semibold ${value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{value ? 'Active' : 'Inactive'}</span>) },
         { key: "id", label: "Actions", render: (value, row) => (
             <div className="flex gap-2">
@@ -201,11 +201,11 @@ export function StudentsList() {
 
             <div className="flex flex-col md:flex-row gap-3 items-start">
                 <Input placeholder="Search students..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1" />
-                <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="px-4 py-3 rounded-xl border-2 border-gray-200">
+                <select aria-label="Filter by class" value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="px-4 py-3 rounded-xl border-2 border-gray-200">
                     <option value="all">All Classes</option>
                     {classLevels.map((cls) => <option key={cls.id} value={cls.id}>{cls.name}</option>)}
                 </select>
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-4 py-3 rounded-xl border-2 border-gray-200">
+                <select aria-label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-4 py-3 rounded-xl border-2 border-gray-200">
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>

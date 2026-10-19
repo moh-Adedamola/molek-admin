@@ -6,8 +6,10 @@
 import { useState, useEffect } from 'react';
 import { examResultsAPI, academicSessionsAPI, termsAPI, classLevelsAPI, subjectsAPI, studentsAPI } from '../api/endpoints';
 import { RefreshCw, Plus, Pencil, Trash2, Search, X } from 'lucide-react';
+import { useConfirm } from "../components/ui/confirmContext";
 
 export function ExamResultsManager() {
+    const confirm = useConfirm();
     const [results, setResults] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
@@ -108,7 +110,7 @@ export function ExamResultsManager() {
     };
 
     const handleDeleteResult = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this result?')) return;
+        if (!(await confirm({ title: 'Delete this result?', message: 'The student\'s marks for this subject and term will be removed. This cannot be undone.', confirmLabel: 'Delete', danger: true }))) return;
         try {
             await examResultsAPI.delete(id);
             setMessage({ type: 'success', text: 'Result deleted.' }); fetchResults();
@@ -195,22 +197,22 @@ export function ExamResultsManager() {
             {/* Filters */}
             <div className="bg-white rounded-xl border border-gray-200 p-4">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <select value={filters.session} onChange={(e) => setFilters({ ...filters, session: e.target.value })}
+                    <select aria-label="Session" value={filters.session} onChange={(e) => setFilters({ ...filters, session: e.target.value })}
                         className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                         <option value="">Session</option>
                         {sessions.map(s => <option key={s.id} value={s.id}>{s.name}{s.is_current ? ' (Current)' : ''}</option>)}
                     </select>
-                    <select value={filters.term} onChange={(e) => setFilters({ ...filters, term: e.target.value })}
+                    <select aria-label="Term" value={filters.term} onChange={(e) => setFilters({ ...filters, term: e.target.value })}
                         className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                         <option value="">Term</option>
                         {filteredTerms.map(t => <option key={t.id} value={t.id}>{t.name}{t.is_current ? ' (Current)' : ''}</option>)}
                     </select>
-                    <select value={filters.class_level} onChange={(e) => setFilters({ ...filters, class_level: e.target.value })}
+                    <select aria-label="Class" value={filters.class_level} onChange={(e) => setFilters({ ...filters, class_level: e.target.value })}
                         className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                         <option value="">Class</option>
                         {classLevels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
-                    <select value={filters.subject} onChange={(e) => setFilters({ ...filters, subject: e.target.value })}
+                    <select aria-label="Subject" value={filters.subject} onChange={(e) => setFilters({ ...filters, subject: e.target.value })}
                         className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                         <option value="">Subject</option>
                         {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -331,7 +333,7 @@ export function ExamResultsManager() {
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1">Student</label>
-                                <select value={newResult.student} onChange={(e) => setNewResult({ ...newResult, student: e.target.value })}
+                                <select aria-label="Student" value={newResult.student} onChange={(e) => setNewResult({ ...newResult, student: e.target.value })}
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" required>
                                     <option value="">Select student...</option>
                                     {students.map(s => <option key={s.id} value={s.id}>{s.admission_number} - {s.first_name} {s.last_name}</option>)}
@@ -339,7 +341,7 @@ export function ExamResultsManager() {
                             </div>
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1">Subject</label>
-                                <select value={newResult.subject} onChange={(e) => setNewResult({ ...newResult, subject: e.target.value })}
+                                <select aria-label="Subject" value={newResult.subject} onChange={(e) => setNewResult({ ...newResult, subject: e.target.value })}
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" required>
                                     <option value="">Select subject...</option>
                                     {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}

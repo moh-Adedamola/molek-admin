@@ -12,8 +12,10 @@
  */
 import { useState, useEffect } from 'react';
 import api from '../api/endpoints';
+import { useConfirm } from "../components/ui/confirmContext";
 
 export function PromotionRevert() {
+    const confirm = useConfirm();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [undoingId, setUndoingId] = useState(null);
@@ -34,7 +36,7 @@ export function PromotionRevert() {
     useEffect(() => { loadEvents(); }, []);
 
     const undoEvent = async (id) => {
-        if (!window.confirm('Undo this promotion? The same students will be moved back to their previous class.')) return;
+        if (!(await confirm({ title: 'Undo this promotion?', message: 'The same students will be moved back to their previous class.', confirmLabel: 'Undo promotion', danger: true }))) return;
         setUndoingId(id);
         try {
             const res = await api.post('/api/users/promotion/undo-event/', { event_id: id });

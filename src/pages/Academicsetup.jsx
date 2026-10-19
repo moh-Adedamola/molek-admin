@@ -7,9 +7,11 @@ import {
 } from "../api/endpoints";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
+import { useConfirm } from "../components/ui/confirmContext";
 
 export function AcademicSetup() {
     // State
+    const confirm = useConfirm();
     const [sessions, setSessions] = useState([]);
     const [terms, setTerms] = useState([]);
     const [classes, setClasses] = useState([]);
@@ -148,30 +150,53 @@ export function AcademicSetup() {
     // ============================================
     // DELETE HANDLERS
     // ============================================
+    const DELETE_API = { session: academicSessionsAPI, term: termsAPI, class: classLevelsAPI };
+    const LISTS = () => ({ session: sessions, term: terms, class: classes, subject: subjects });
+    const ATTACHED = {
+        terms: "term(s)", exam_results: "exam result(s)", ca_scores: "CA score(s)", behavioral_records: "behaviour record(s)",
+        enrollments: "enrollment record(s)", promotion_rules: "promotion rule(s)",
+        students_enrolled_this_session: "student record(s) that list this as their joining session",
+        students: "student(s), who would be left with no class",
+    };
+
     const handleDelete = async (id, type) => {
-        if (!window.confirm("Are you sure you want to delete this?")) return;
+        const name = LISTS()[type]?.find((x) => x.id === id)?.name || "this item";
+        if (!(await confirm({ title: `Delete ${type} "${name}"?`, message: "This cannot be undone.", confirmLabel: "Delete", danger: true }))) return;
 
         setLoading(true);
         try {
-            if (type === "session") await academicSessionsAPI.delete(id);
-            if (type === "term") await termsAPI.delete(id);
-            if (type === "class") await classLevelsAPI.delete(id);
             if (type === "subject") await subjectsAPI.delete(id);
-
+            else await DELETE_API[type].delete(id);
             await fetchAllData();
             setSuccess(" Deleted successfully!");
         } catch (err) {
-            // The backend returns 409 with usage counts when a subject is in
-            // use. Offer force-delete or point the admin at merge.
             const data = err.response?.data;
-            if (type === "subject" && err.response?.status === 409) {
-                const msg =
-                    `"${subjects.find((x) => x.id === id)?.name || "Subject"}" is in use: ` +
-                    `${data.exam_results} exam result(s), ${data.ca_scores} CA score(s)` +
-                    (data.promotion_rules?.length ? `, and ${data.promotion_rules.length} promotion rule(s)` : "") +
-                    `.\n\nOK = delete the subject AND all those records permanently.\n` +
-                    `Cancel = keep it (use "Merge into…" instead to preserve the marks).`;
-                if (window.confirm(msg)) {
+            if (err.response?.status === 409 && type !== "subject") {
+                // The backend refuses while results etc. are attached; say exactly what would go.
+                const ok = await confirm({
+                    title: `"${name}" still has data`,
+                    message: "Deleting it will permanently delete all of this as well. Only the nightly backup could bring it back.",
+                    details: Object.entries(data.counts || {}).map(([k, v]) => `${v} ${ATTACHED[k] || k}`),
+                    requireText: data.confirm_with, confirmLabel: "Delete everything", danger: true,
+                });
+                if (ok) {
+                    try {
+                        await DELETE_API[type].delete(id, { confirm: data.confirm_with });
+                        await fetchAllData();
+                        setSuccess(` "${name}" and its data were deleted.`);
+                    } catch (e2) {
+                        setError("Delete failed: " + (e2.response?.data?.error || e2.message));
+                    }
+                }
+            } else if (type === "subject" && err.response?.status === 409) {
+                const ok = await confirm({
+                    title: `"${name}" is in use`,
+                    message: "Deleting it also deletes all of these marks permanently. To keep the marks, cancel and use \"Merge into…\" instead.",
+                    details: [`${data.exam_results} exam result(s)`, `${data.ca_scores} CA score(s)`,
+                        ...(data.promotion_rules?.length ? [`${data.promotion_rules.length} promotion rule(s) list it as compulsory`] : [])],
+                    requireText: name, confirmLabel: "Delete subject and marks", danger: true,
+                });
+                if (ok) {
                     try {
                         await subjectsAPI.forceDelete(id);
                         await fetchAllData();
@@ -195,20 +220,14 @@ export function AcademicSetup() {
             setError("Need at least one other subject to merge into.");
             return;
         }
-        const list = options.map((x, i) => `${i + 1}. ${x.name} (${x.code})`).join("\n");
-        const pick = window.prompt(
-            `Merge "${source?.name}" INTO which subject?\n\n${list}\n\n` +
-            `All of "${source?.name}"'s results move to your choice, then it is deleted.\n` +
-            `Enter a number:`,
-        );
-        if (!pick) return;
-        const idx = parseInt(pick, 10) - 1;
-        if (isNaN(idx) || idx < 0 || idx >= options.length) {
-            setError("Invalid choice.");
-            return;
-        }
-        const target = options[idx];
-        if (!window.confirm(`Merge "${source?.name}" into "${target.name}"? This cannot be undone.`)) return;
+        const targetId = await confirm({
+            title: `Merge "${source?.name}" into another subject`,
+            message: `All of "${source?.name}"'s results move to the subject you choose, then "${source?.name}" is deleted. This cannot be undone.`,
+            choices: options.map((x) => ({ value: String(x.id), label: `${x.name} (${x.code})` })),
+            choiceLabel: "Move the results into", confirmLabel: "Merge", danger: true,
+        });
+        if (!targetId) return;
+        const target = options.find((x) => String(x.id) === String(targetId));
         setLoading(true);
         try {
             const res = await subjectsAPI.mergeInto(sourceId, target.id);
@@ -226,11 +245,11 @@ export function AcademicSetup() {
     };
 
     const handleRenameSubject = async (subject) => {
-        const newName = window.prompt(
-            `Fix the subject name (e.g. correct a misspelling).\n` +
-            `This only changes the name — results and class levels are kept.`,
-            subject.name,
-        );
+        const newName = await confirm({
+            title: `Rename "${subject.name}"`,
+            message: "Fix the subject name, for example a misspelling. Only the name changes; results and class levels are kept.",
+            input: { label: "New name", defaultValue: subject.name }, confirmLabel: "Rename",
+        });
         if (newName === null) return;
         const trimmed = newName.trim();
         if (!trimmed || trimmed === subject.name) return;
@@ -407,7 +426,7 @@ export function AcademicSetup() {
                                     <div className="font-bold text-gray-900">
                                         {session.name}
                                         {session.is_current && (
-                                            <span className="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded">
+                                            <span className="ml-2 text-xs bg-green-700 text-white px-2 py-1 rounded">
                                                 Active
                                             </span>
                                         )}
@@ -461,7 +480,7 @@ export function AcademicSetup() {
                                     <label className="block font-semibold text-gray-700 mb-2">
                                         Session
                                     </label>
-                                    <select
+                                    <select aria-label="Session"
                                         value={termForm.session}
                                         onChange={(e) => setTermForm({...termForm, session: e.target.value})}
                                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-200"
@@ -477,7 +496,7 @@ export function AcademicSetup() {
                                     <label className="block font-semibold text-gray-700 mb-2">
                                         Term
                                     </label>
-                                    <select
+                                    <select aria-label="Term"
                                         value={termForm.name}
                                         onChange={(e) => setTermForm({...termForm, name: e.target.value})}
                                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-200"
@@ -544,7 +563,7 @@ export function AcademicSetup() {
                                             <div className="font-bold text-gray-900">
                                                 {term.name} - {term.session_name}
                                                 {term.is_current && (
-                                                    <span className="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded">
+                                                    <span className="ml-2 text-xs bg-green-700 text-white px-2 py-1 rounded">
                                                         Active
                                                     </span>
                                                 )}

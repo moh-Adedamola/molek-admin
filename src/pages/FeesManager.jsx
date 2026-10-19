@@ -111,7 +111,7 @@ export function FeesManager() {
             <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <div className="flex items-center gap-3 mb-4">
                     <label className="text-sm font-medium text-gray-700">Filter by class:</label>
-                    <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="px-3 py-2 rounded-lg border-2 border-gray-200">
+                    <select aria-label="Filter by class" value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="px-3 py-2 rounded-lg border-2 border-gray-200">
                         <option value="all">All Classes</option>
                         {classLevels.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
@@ -144,7 +144,7 @@ export function FeesManager() {
                 </h3>
                 <p className="text-sm text-gray-600 mb-3">Mark "yes" or "no" in the paid column, then upload. Re-uploading updates existing records.</p>
                 <div className="flex items-center gap-3 flex-wrap">
-                    <input type="file" accept=".csv" onChange={(e) => setUploadFile(e.target.files[0])}
+                    <input type="file" aria-label="Fees CSV file" accept=".csv" onChange={(e) => setUploadFile(e.target.files[0])}
                         className="text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                     <Button onClick={handleUpload} disabled={!uploadFile || uploading}>
                         <Upload size={16} className="mr-1" /> {uploading ? 'Uploading...' : 'Upload'}

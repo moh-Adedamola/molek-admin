@@ -137,7 +137,7 @@ export function AdminsList() {
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1"
         />
-        <select
+        <select aria-label="Filter by role"
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
           className="px-4 py-3 rounded-xl border-2 border-gray-200"

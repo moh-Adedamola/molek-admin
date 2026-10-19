@@ -3,10 +3,10 @@ export function Modal({ isOpen, title, children, onClose, actions }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-slideIn">
+      <div role="dialog" aria-modal="true" aria-label={title} className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-slideIn">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-2xl">
+          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-600 hover:text-gray-900 dark:hover:text-gray-300 text-2xl">
             ✕
           </button>
         </div>
@@ -18,8 +18,8 @@ export function Modal({ isOpen, title, children, onClose, actions }) {
               onClick={action.onClick}
               className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                 action.variant === "danger"
-                  ? "bg-red-500 hover:bg-red-600 text-white"
-                  : "bg-blue-500 hover:bg-blue-600 text-white"
+                  ? "bg-red-700 hover:bg-red-800 text-white"
+                  : "bg-blue-700 hover:bg-blue-800 text-white"
               }`}
             >
               {action.label}
