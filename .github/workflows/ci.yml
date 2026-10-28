@@ -26,5 +26,7 @@ jobs:
       - run: npm ci
       - name: Lint (no errors or warnings allowed)
         run: npx eslint . --max-warnings 0
+      - name: Unit tests
+        run: npm test
       - name: Production build (uses .env.production)
         run: npx vite build

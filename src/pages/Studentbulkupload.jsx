@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { studentsAPI } from "../api/endpoints";
 import { Button } from "../components/ui/Button";
+import { parseCsv, toCsv, dateIssue, findMatches, fetchAllStudents, describeStudent } from "../lib/duplicates";
+
+const REQUIRED = ["first_name", "last_name", "date_of_birth", "gender", "class_level"];
 
 export function StudentBulkUpload() {
     const navigate = useNavigate();
@@ -12,15 +15,57 @@ export function StudentBulkUpload() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [uploadResults, setUploadResults] = useState(null);
+    // Pre-upload check: which rows are new, which match existing students, which dates are unclear
+    const [check, setCheck] = useState(null);
+    const [checking, setChecking] = useState(false);
+    const [includeMatches, setIncludeMatches] = useState(false);
+    const [datesConfirmed, setDatesConfirmed] = useState(false);
+
+    const analyse = async (selected) => {
+        setChecking(true);
+        setCheck(null);
+        setIncludeMatches(false);
+        setDatesConfirmed(false);
+        try {
+            const { headers, rows } = parseCsv(await selected.text());
+            const missingColumns = REQUIRED.filter((h) => !headers.includes(h));
+            let existing = [], lookupFailed = false;
+            try {
+                existing = await fetchAllStudents((params) => studentsAPI.list(params));
+            } catch {
+                lookupFailed = true;
+            }
+            const matches = findMatches(rows, existing);
+            const dates = rows.map((r) => dateIssue(r.date_of_birth));
+            setCheck({ headers, rows, matches, dates, missingColumns, lookupFailed });
+        } catch {
+            setError("Could not read this file. Save it from Excel as CSV (UTF-8) and try again.");
+        } finally {
+            setChecking(false);
+        }
+    };
+
+    const rowName = (r) => `${r.first_name} ${r.last_name}`.trim();
+    const sendIdx = check ? check.rows.map((_, i) => i).filter((i) => includeMatches || check.matches[i].length === 0) : [];
+    const matchedIdx = check ? check.rows.map((_, i) => i).filter((i) => check.matches[i].length > 0) : [];
+    const ambiguousIdx = check ? sendIdx.filter((i) => check.dates[i] === "ambiguous") : [];
+    const badDateIdx = check ? sendIdx.filter((i) => check.dates[i] === "invalid" || check.dates[i] === "missing") : [];
+    const blocked = !check || checking || check.missingColumns.length > 0 || sendIdx.length === 0 ||
+        badDateIdx.length > 0 || (ambiguousIdx.length > 0 && !datesConfirmed);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
-        if (selectedFile && selectedFile.type === "text/csv") {
+        // Windows often labels CSV files as Excel files, so accept anything named .csv
+        if (selectedFile && (selectedFile.type === "text/csv" || /\.csv$/i.test(selectedFile.name))) {
             setFile(selectedFile);
             setError("");
+            setSuccess("");
+            setUploadResults(null);
             setUploadProgress(0);
             setProcessingStatus("");
+            analyse(selectedFile);
         } else {
+            setCheck(null);
             setError("Please select a valid CSV file");
             setFile(null);
         }
@@ -33,6 +78,7 @@ export function StudentBulkUpload() {
             setError("Please select a CSV file");
             return;
         }
+        if (blocked) return;
 
         setLoading(true);
         setError("");
@@ -41,8 +87,10 @@ export function StudentBulkUpload() {
         setUploadProgress(0);
         setProcessingStatus("Uploading file...");
 
+        // Send only the rows being added: students already in the system are left out
+        const toSend = new File([toCsv(check.headers, sendIdx.map((i) => check.rows[i]))], file.name, { type: "text/csv" });
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", toSend);
 
         try {
             // Create axios request with progress tracking
@@ -64,6 +112,7 @@ export function StudentBulkUpload() {
             setSuccess(` Successfully uploaded ${response.data.created} students!`);
             setUploadResults(response.data);
             setFile(null);
+            setCheck(null);
             // Reset file input
             document.getElementById("csv-file").value = "";
         } catch (err) {
@@ -175,16 +224,64 @@ export function StudentBulkUpload() {
                                      Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
                                 </p>
                             )}
+                            {checking && <p className="mt-3 text-sm text-gray-600">Checking the file against students already in the system…</p>}
+                            {check && !checking && (
+                                <div className="mt-4 space-y-3" aria-live="polite">
+                                    {check.missingColumns.length > 0 && (
+                                        <div className="p-4 rounded-xl border-2 border-red-300 bg-red-50 text-red-800 text-sm">
+                                            <b>Missing columns:</b> {check.missingColumns.join(", ")}. Use the template so every required column is there.
+                                        </div>
+                                    )}
+                                    <div className="p-4 rounded-xl border-2 border-green-200 bg-green-50 text-green-800 text-sm">
+                                        <b>{sendIdx.length}</b> of {check.rows.length} student{check.rows.length === 1 ? "" : "s"} in this file will be added.
+                                    </div>
+                                    {check.lookupFailed && (
+                                        <div className="p-4 rounded-xl border-2 border-amber-300 bg-amber-50 text-amber-900 text-sm">
+                                            Could not check for students already in the system. Search the student list for these names before uploading.
+                                        </div>
+                                    )}
+                                    {matchedIdx.length > 0 && (
+                                        <div className="p-4 rounded-xl border-2 border-amber-300 bg-amber-50 text-amber-900 text-sm">
+                                            <p><b>{matchedIdx.length} already in the system</b> (same name){includeMatches ? "" : ": these rows will be skipped"}.</p>
+                                            <ul className="mt-2 list-disc pl-5 space-y-1 max-h-48 overflow-y-auto">
+                                                {matchedIdx.map((i) => (
+                                                    <li key={i}>Row {i + 2}: {rowName(check.rows[i])} (born {check.rows[i].date_of_birth || "?"}) matches {check.matches[i].map(describeStudent).join("; ")}</li>
+                                                ))}
+                                            </ul>
+                                            <label className="mt-3 flex items-start gap-2">
+                                                <input type="checkbox" className="mt-1" checked={includeMatches} onChange={(e) => setIncludeMatches(e.target.checked)} />
+                                                <span>Upload these rows anyway. Only tick this if they are <b>different students</b> who share a name.</span>
+                                            </label>
+                                        </div>
+                                    )}
+                                    {badDateIdx.length > 0 && (
+                                        <div className="p-4 rounded-xl border-2 border-red-300 bg-red-50 text-red-800 text-sm">
+                                            <p><b>Fix these dates of birth</b> before uploading (write them as YYYY-MM-DD, e.g. 2013-05-15):</p>
+                                            <ul className="mt-2 list-disc pl-5">{badDateIdx.map((i) => <li key={i}>Row {i + 2}: {rowName(check.rows[i])}: "{check.rows[i].date_of_birth}"</li>)}</ul>
+                                        </div>
+                                    )}
+                                    {ambiguousIdx.length > 0 && (
+                                        <div className="p-4 rounded-xl border-2 border-amber-300 bg-amber-50 text-amber-900 text-sm">
+                                            <p><b>{ambiguousIdx.length} date{ambiguousIdx.length === 1 ? "" : "s"} could be read two ways</b> (e.g. 03/01/2014 is 3 January or 1 March). They will be read as <b>day/month/year</b>.</p>
+                                            <ul className="mt-2 list-disc pl-5 max-h-40 overflow-y-auto">{ambiguousIdx.map((i) => <li key={i}>Row {i + 2}: {rowName(check.rows[i])}: {check.rows[i].date_of_birth}</li>)}</ul>
+                                            <label className="mt-3 flex items-start gap-2">
+                                                <input type="checkbox" className="mt-1" checked={datesConfirmed} onChange={(e) => setDatesConfirmed(e.target.checked)} />
+                                                <span>I have checked: these dates are written <b>day/month/year</b>.</span>
+                                            </label>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex gap-4">
                             <Button
                                 type="submit"
                                 loading={loading}
-                                disabled={!file || loading}
+                                disabled={!file || loading || blocked}
                                 className="flex-1"
                             >
-                                {loading ? `Uploading... ${uploadProgress}%` : 'Upload Students '}
+                                {loading ? `Uploading... ${uploadProgress}%` : check && !checking ? `Upload ${sendIdx.length} student${sendIdx.length === 1 ? '' : 's'}` : 'Upload Students '}
                             </Button>
                             <Button
                                 type="button"
@@ -232,7 +329,7 @@ export function StudentBulkUpload() {
                                 <li>First row MUST be column headers</li>
                                 <li><strong>DO NOT</strong> include admission_number (auto-generated)</li>
                                 <li>Class levels must exist in system (JSS1-JSS3, SS1-SS3)</li>
-                                <li>Date format: DD/MM/YYYY (e.g., 15/05/2010) or YYYY-MM-DD</li>
+                                <li>Date format: YYYY-MM-DD (e.g., 2010-05-15) is safest. DD/MM/YYYY also works; dates that could be read two ways are checked before upload</li>
                                 <li>Gender: M (Male) or F (Female)</li>
                                 <li>Multiple students can share same email</li>
                                 <li>File encoding: UTF-8</li>

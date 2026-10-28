@@ -4,8 +4,11 @@ import { studentsAPI, classLevelsAPI, academicSessionsAPI, subjectsAPI } from ".
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
+import { useConfirm } from "../components/ui/confirmContext";
+import { nameKey, describeStudent } from "../lib/duplicates";
 
 export function StudentForm() {
+    const confirm = useConfirm();
     const navigate = useNavigate();
     const { id } = useParams();
     const mode = id ? "edit" : "create";
@@ -206,6 +209,31 @@ export function StudentForm() {
             setError("Please fill in all required fields.");
             setLoading(false);
             return;
+        }
+
+        // Adding a student who is already in the system creates a duplicate: check the name first.
+        if (mode === "create") {
+            try {
+                const res = await studentsAPI.list({ search: formData.last_name.trim(), page_size: 100 });
+                const data = res?.data;
+                const items = Array.isArray(data) ? data : data?.results || [];
+                const key = nameKey(formData.first_name, formData.last_name);
+                const same = items.filter((st) => nameKey(st.first_name, st.last_name) === key);
+                if (same.length > 0) {
+                    const go = await confirm({
+                        title: "This student may already be in the system",
+                        message: `${same.length === 1 ? "A student with this name already exists" : "Students with this name already exist"}. Adding again creates a duplicate. Only continue if this is a different child.`,
+                        details: same.map(describeStudent),
+                        confirmLabel: "Add anyway",
+                    });
+                    if (!go) {
+                        setLoading(false);
+                        return;
+                    }
+                }
+            } catch {
+                // The name check could not run (e.g. connection problem): don't block saving.
+            }
         }
 
         try {
